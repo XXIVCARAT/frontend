@@ -1,5 +1,14 @@
 const isLocalHost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
-const API_BASE = (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.trim())
+
+function normalizeApiBaseUrl(rawUrl) {
+  if (!rawUrl || !rawUrl.trim()) return '';
+  const trimmed = rawUrl.trim();
+  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  return withProtocol.replace(/\/+$/, '');
+}
+
+const configuredApiBase = normalizeApiBaseUrl(import.meta.env.VITE_API_URL);
+const API_BASE = configuredApiBase
   || (isLocalHost ? 'http://localhost:8080' : 'https://badminton-backend-z96t.onrender.com');
 
 function normalizeErrorMessage(message, status, operation) {
