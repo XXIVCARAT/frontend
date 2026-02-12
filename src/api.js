@@ -2,7 +2,7 @@ const isLocalHost = ['localhost', '127.0.0.1', '::1'].includes(window.location.h
 const API_BASE = (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.trim())
   || (isLocalHost ? 'http://localhost:8080' : 'https://badminton-backend-z96t.onrender.com');
 
-function normalizeErrorMessage(message, status) {
+function normalizeErrorMessage(message, status, operation) {
   const text = (message || '').toLowerCase();
 
   if (status === 409) {
@@ -10,11 +10,11 @@ function normalizeErrorMessage(message, status) {
     if (text.includes('username')) return 'Username already exists';
   }
 
-  if (status === 401) {
+  if (status === 401 && operation === 'login') {
     return 'Password invalid';
   }
 
-  if (status === 404) {
+  if (status === 404 && operation === 'login') {
     return 'Account does not exist';
   }
 
@@ -27,7 +27,7 @@ function normalizeErrorMessage(message, status) {
   return message || 'Request failed';
 }
 
-async function handleResponse(response) {
+async function handleResponse(response, operation) {
   if (response.ok) {
     return response.json();
   }
@@ -59,7 +59,7 @@ async function handleResponse(response) {
     message = response.statusText || 'Request failed';
   }
 
-  const error = new Error(normalizeErrorMessage(message, response.status));
+  const error = new Error(normalizeErrorMessage(message, response.status, operation));
   error.status = response.status;
   throw error;
 }
@@ -71,7 +71,7 @@ export async function login(identifier, password) {
     body: JSON.stringify({ identifier, password })
   });
 
-  return handleResponse(response);
+  return handleResponse(response, 'login');
 }
 
 export async function register(email, username, password) {
@@ -81,5 +81,5 @@ export async function register(email, username, password) {
     body: JSON.stringify({ email, username, password })
   });
 
-  return handleResponse(response);
+  return handleResponse(response, 'register');
 }
