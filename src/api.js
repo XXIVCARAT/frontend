@@ -15,8 +15,8 @@ function normalizeErrorMessage(message, status, operation) {
   const text = (message || '').toLowerCase();
 
   if (status === 409) {
-    if (text.includes('email')) return 'Email already exists';
-    if (text.includes('username')) return 'Username already exists';
+    if (text.includes('email')) return 'Email id already in use';
+    if (text.includes('username')) return 'Username taken';
   }
 
   if (status === 401 && operation === 'login') {
