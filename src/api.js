@@ -130,3 +130,45 @@ export async function logout() {
 
   return handleResponse(response, 'logout');
 }
+
+export async function fetchPlayers() {
+  const response = await fetch(`${API_BASE}/api/players`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  return handleResponse(response, 'players');
+}
+
+export async function createMatchLogRequest(payload) {
+  const response = await fetch(`${API_BASE}/api/match-log/requests`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  return handleResponse(response, 'create-match-log');
+}
+
+export async function fetchMatchLogInbox() {
+  const response = await fetch(`${API_BASE}/api/match-log/requests/inbox`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  return handleResponse(response, 'match-log-inbox');
+}
+
+export async function respondToMatchLogRequest(requestId, decision) {
+  const response = await fetch(`${API_BASE}/api/match-log/requests/${requestId}/decision`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({ decision })
+  });
+
+  return handleResponse(response, 'respond-match-log');
+}

@@ -1,5 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { fetchDashboardStats, fetchSession, login, logout, register } from './api.js';
+import {
+  createMatchLogRequest,
+  fetchDashboardStats,
+  fetchMatchLogInbox,
+  fetchPlayers,
+  fetchSession,
+  login,
+  logout,
+  register,
+  respondToMatchLogRequest
+} from './api.js';
+
+const DEFAULT_MATCH_FORMAT = 'SINGLES';
 
 export default function App() {
   const [mode, setMode] = useState('login');
@@ -12,23 +24,48 @@ export default function App() {
   const [sessionLoading, setSessionLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [dashboardStats, setDashboardStats] = useState(null);
+  const [statsVersion, setStatsVersion] = useState(0);
+
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [notificationMenuOpen, setNotificationMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
+  const notificationMenuRef = useRef(null);
+
+  const [players, setPlayers] = useState([]);
+  const [inboxLoading, setInboxLoading] = useState(false);
+  const [matchLogInbox, setMatchLogInbox] = useState([]);
+  const [inboxVersion, setInboxVersion] = useState(0);
+  const [decisionBusyId, setDecisionBusyId] = useState(null);
+
+  const [matchLogModalOpen, setMatchLogModalOpen] = useState(false);
+  const [matchLogSubmitting, setMatchLogSubmitting] = useState(false);
+  const [matchFormat, setMatchFormat] = useState(DEFAULT_MATCH_FORMAT);
+  const [winnerSide, setWinnerSide] = useState('TEAM');
+  const [matchName, setMatchName] = useState('');
+  const [teamPoints, setTeamPoints] = useState('');
+  const [opponentPoints, setOpponentPoints] = useState('');
+  const [teammateId, setTeammateId] = useState('');
+  const [opponentOneId, setOpponentOneId] = useState('');
+  const [opponentTwoId, setOpponentTwoId] = useState('');
 
   const isLogin = mode === 'login';
 
   useEffect(() => {
-    if (!profileMenuOpen) return;
+    if (!profileMenuOpen && !notificationMenuOpen) return;
 
     function handleDocumentClick(event) {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
         setProfileMenuOpen(false);
+      }
+      if (notificationMenuRef.current && !notificationMenuRef.current.contains(event.target)) {
+        setNotificationMenuOpen(false);
       }
     }
 
     function handleEscape(event) {
       if (event.key === 'Escape') {
         setProfileMenuOpen(false);
+        setNotificationMenuOpen(false);
       }
     }
 
@@ -38,7 +75,7 @@ export default function App() {
       document.removeEventListener('mousedown', handleDocumentClick);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [profileMenuOpen]);
+  }, [profileMenuOpen, notificationMenuOpen]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -94,7 +131,81 @@ export default function App() {
     return () => {
       isCancelled = true;
     };
+  }, [user?.id, statsVersion]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setPlayers([]);
+      return;
+    }
+
+    let isCancelled = false;
+
+    fetchPlayers()
+      .then((data) => {
+        if (!isCancelled) {
+          setPlayers(Array.isArray(data) ? data : []);
+        }
+      })
+      .catch((error) => {
+        if (!isCancelled) {
+          if (error?.status === 401 || error?.status === 403) {
+            setUser(null);
+            setStatus({ type: 'info', message: 'Session expired. Please log in again.' });
+            return;
+          }
+          setStatus({ type: 'error', message: error.message || 'Unable to load players' });
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setMatchLogInbox([]);
+      return;
+    }
+
+    let isCancelled = false;
+    setInboxLoading(true);
+
+    fetchMatchLogInbox()
+      .then((rows) => {
+        if (!isCancelled) {
+          setMatchLogInbox(Array.isArray(rows) ? rows : []);
+        }
+      })
+      .catch((error) => {
+        if (!isCancelled) {
+          if (error?.status === 401 || error?.status === 403) {
+            setUser(null);
+            setStatus({ type: 'info', message: 'Session expired. Please log in again.' });
+            return;
+          }
+          setStatus({ type: 'error', message: error.message || 'Unable to load match requests' });
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setInboxLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [user?.id, inboxVersion]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    if (matchFormat === 'SINGLES') {
+      setTeammateId('');
+      setOpponentTwoId('');
+    }
+  }, [matchFormat, user?.id]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -126,8 +237,125 @@ export default function App() {
     }
   }
 
+  function resetMatchLogForm() {
+    setMatchFormat(DEFAULT_MATCH_FORMAT);
+    setWinnerSide('TEAM');
+    setMatchName('');
+    setTeamPoints('');
+    setOpponentPoints('');
+    setTeammateId('');
+    setOpponentOneId('');
+    setOpponentTwoId('');
+  }
+
+  function openMatchLogModal() {
+    setProfileMenuOpen(false);
+    setNotificationMenuOpen(false);
+    resetMatchLogForm();
+    setMatchLogModalOpen(true);
+  }
+
+  function closeMatchLogModal() {
+    setMatchLogModalOpen(false);
+  }
+
+  function toUserId(value) {
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      return null;
+    }
+    return parsed;
+  }
+
+  async function handleCreateMatchLog(event) {
+    event.preventDefault();
+    if (!user?.id) return;
+    const teammate = toUserId(teammateId);
+    const opponentOne = toUserId(opponentOneId);
+    const opponentTwo = toUserId(opponentTwoId);
+
+    const teamUserIds = matchFormat === 'DOUBLES' ? [user.id, teammate] : [user.id];
+    const opponentUserIds = matchFormat === 'DOUBLES' ? [opponentOne, opponentTwo] : [opponentOne];
+
+    const normalizedTeamPoints = teamPoints.trim();
+    const normalizedOpponentPoints = opponentPoints.trim();
+
+    if (!matchName.trim()) {
+      setStatus({ type: 'error', message: 'Match name is required' });
+      return;
+    }
+
+    if (opponentUserIds.some((id) => id === null) || teamUserIds.some((id) => id === null)) {
+      setStatus({
+        type: 'error',
+        message: matchFormat === 'DOUBLES'
+          ? 'Select 1 teammate and 2 opponents'
+          : 'Select 1 opponent'
+      });
+      return;
+    }
+
+    if (teamUserIds.includes(user.id) && opponentUserIds.includes(user.id)) {
+      setStatus({ type: 'error', message: 'You cannot be in opponent team' });
+      return;
+    }
+
+    const allIds = [...teamUserIds, ...opponentUserIds];
+    if (new Set(allIds).size !== allIds.length) {
+      setStatus({ type: 'error', message: 'Same player cannot be selected more than once' });
+      return;
+    }
+
+    if ((normalizedTeamPoints && !normalizedOpponentPoints) || (!normalizedTeamPoints && normalizedOpponentPoints)) {
+      setStatus({
+        type: 'error',
+        message: 'Enter both team and opponent points, or leave both empty'
+      });
+      return;
+    }
+
+    setMatchLogSubmitting(true);
+
+    try {
+      await createMatchLogRequest({
+        matchName: matchName.trim(),
+        matchFormat,
+        winnerSide,
+        points: normalizedTeamPoints && normalizedOpponentPoints
+          ? `${normalizedTeamPoints}-${normalizedOpponentPoints}`
+          : null,
+        teamUserIds,
+        opponentUserIds
+      });
+
+      setStatus({ type: 'success', message: 'Match log request sent to all selected players.' });
+      closeMatchLogModal();
+      setInboxVersion((v) => v + 1);
+    } catch (error) {
+      setStatus({ type: 'error', message: error.message || 'Unable to create match request' });
+    } finally {
+      setMatchLogSubmitting(false);
+    }
+  }
+
+  async function handleDecision(requestId, decision) {
+    setDecisionBusyId(`${requestId}:${decision}`);
+
+    try {
+      await respondToMatchLogRequest(requestId, decision);
+      setStatus({ type: 'success', message: `Match request ${decision === 'ACCEPT' ? 'accepted' : 'rejected'}.` });
+      setInboxVersion((v) => v + 1);
+      setStatsVersion((v) => v + 1);
+    } catch (error) {
+      setStatus({ type: 'error', message: error.message || 'Unable to submit decision' });
+    } finally {
+      setDecisionBusyId(null);
+    }
+  }
+
   async function handleLogout() {
     setProfileMenuOpen(false);
+    setNotificationMenuOpen(false);
 
     try {
       await logout();
@@ -136,6 +364,9 @@ export default function App() {
     }
 
     setDashboardStats(null);
+    setMatchLogInbox([]);
+    setPlayers([]);
+    setMatchLogModalOpen(false);
     setUser(null);
     setStatus({ type: 'info', message: 'Logged out.' });
   }
@@ -158,6 +389,33 @@ export default function App() {
     const matchesLost = dashboardStats?.matchesLost ?? 0;
     const winRate = `${dashboardStats?.winRate ?? 0}%`;
     const winSummary = `${dashboardStats?.matchesWon ?? 0}W - ${dashboardStats?.matchesLost ?? 0}L`;
+    const playersPerSide = matchFormat === 'DOUBLES' ? 2 : 1;
+    const totalRequiredPlayers = playersPerSide * 2;
+    const teammateSelectedId = toUserId(teammateId);
+    const opponentOneSelectedId = toUserId(opponentOneId);
+    const opponentTwoSelectedId = toUserId(opponentTwoId);
+    const selectedTotalPlayers = matchFormat === 'DOUBLES'
+      ? 1 + (teammateSelectedId ? 1 : 0) + (opponentOneSelectedId ? 1 : 0) + (opponentTwoSelectedId ? 1 : 0)
+      : 1 + (opponentOneSelectedId ? 1 : 0);
+    const pendingRequests = matchLogInbox.filter((request) => request.status === 'PENDING');
+
+    const teamMateOptions = players.filter((player) => {
+      if (player.id === user.id) return false;
+      if (opponentOneSelectedId === player.id || opponentTwoSelectedId === player.id) return false;
+      return true;
+    });
+    const opponentOneOptions = players.filter((player) => {
+      if (player.id === user.id) return false;
+      if (teammateSelectedId === player.id) return false;
+      if (opponentTwoSelectedId === player.id) return false;
+      return true;
+    });
+    const opponentTwoOptions = players.filter((player) => {
+      if (player.id === user.id) return false;
+      if (teammateSelectedId === player.id) return false;
+      if (opponentOneSelectedId === player.id) return false;
+      return true;
+    });
 
     return (
       <div className="page page-dashboard">
@@ -174,23 +432,130 @@ export default function App() {
                 <span className="dash-badge">{tier}</span>
               </p>
             </div>
-            <div className="dash-profile-menu" ref={profileMenuRef}>
-              <button
-                className="dash-avatar"
-                onClick={() => setProfileMenuOpen((open) => !open)}
-                title="Profile menu"
-                aria-haspopup="menu"
-                aria-expanded={profileMenuOpen}
-              >
-                {profileName.slice(0, 2).toUpperCase()}
-              </button>
-              {profileMenuOpen && (
-                <div className="dash-menu" role="menu">
-                  <button className="dash-menu-item" onClick={handleLogout} role="menuitem">
-                    Log out
-                  </button>
-                </div>
-              )}
+            <div className="dash-header-actions">
+              <div className="dash-profile-menu" ref={notificationMenuRef}>
+                <button
+                  className="dash-bell-btn"
+                  onClick={() => {
+                    setNotificationMenuOpen((open) => !open);
+                    setProfileMenuOpen(false);
+                  }}
+                  title="Notifications"
+                  aria-haspopup="menu"
+                  aria-expanded={notificationMenuOpen}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" className="dash-bell-icon">
+                    <path d="M12 3a5 5 0 0 0-5 5v2.8c0 .9-.3 1.8-.8 2.6L4.8 15a1 1 0 0 0 .8 1.6h12.8a1 1 0 0 0 .8-1.6l-1.4-1.6a4.8 4.8 0 0 1-.8-2.6V8a5 5 0 0 0-5-5Zm0 18a2.5 2.5 0 0 0 2.4-2h-4.8A2.5 2.5 0 0 0 12 21Z" />
+                  </svg>
+                  {pendingRequests.length > 0 && (
+                    <span className="dash-notif-badge">{pendingRequests.length}</span>
+                  )}
+                </button>
+                {notificationMenuOpen && (
+                  <div className="dash-menu dash-notif-menu" role="menu">
+                    <p className="dash-notif-title">Pending Requests</p>
+                    {pendingRequests.length === 0 ? (
+                      <p className="dash-notif-empty">No pending requests.</p>
+                    ) : (
+                      <div className="dash-notif-list">
+                        {pendingRequests.map((request) => {
+                          const teamNames = request.participants
+                            .filter((participant) => participant.teamSide === 'TEAM')
+                            .map((participant) => participant.username)
+                            .join(', ');
+                          const opponentNames = request.participants
+                            .filter((participant) => participant.teamSide === 'OPPONENT')
+                            .map((participant) => participant.username)
+                            .join(', ');
+                          const winnerNames = request.winnerSide === 'TEAM' ? teamNames : opponentNames;
+                          const loserNames = request.winnerSide === 'TEAM' ? opponentNames : teamNames;
+
+                          const myParticipant = request.participants.find((participant) => participant.userId === user.id);
+                          const userWon = myParticipant ? myParticipant.teamSide === request.winnerSide : null;
+                          const userOutcomeText = userWon === null
+                            ? 'You are not in this match'
+                            : userWon
+                              ? 'You won this match'
+                              : 'You lost this match';
+                          const decisionDisabled = decisionBusyId !== null || !request.canRespond;
+
+                          const scoreParts = (request.points || '')
+                            .split('-')
+                            .map((part) => part.trim())
+                            .filter(Boolean);
+                          const scoreText = scoreParts.length === 2
+                            ? `Points: Team ${scoreParts[0]} - Opponent ${scoreParts[1]}`
+                            : (request.points ? `Points: ${request.points}` : 'Points: Not provided');
+
+                          return (
+                            <article key={`notif-${request.id}`} className="dash-notif-item">
+                              <p className="dash-notif-item-title">{request.matchName}</p>
+                              <p className={`dash-notif-result ${userWon ? 'won' : userWon === false ? 'lost' : ''}`}>
+                                {userOutcomeText}
+                              </p>
+                              <p className="dash-notif-item-meta">{request.matchFormat} | By {request.createdByUsername}</p>
+                              <p className="dash-notif-item-meta">
+                                Winner: <span className="dash-notif-emph win">{winnerNames || '-'}</span>
+                              </p>
+                              <p className="dash-notif-item-meta">
+                                Loser: <span className="dash-notif-emph loss">{loserNames || '-'}</span>
+                              </p>
+                              <p className="dash-notif-item-meta">{scoreText}</p>
+                              <div className="dash-notif-actions">
+                                <button
+                                  type="button"
+                                  className="dash-menu-item approve-btn"
+                                  disabled={decisionDisabled}
+                                  onClick={() => handleDecision(request.id, 'ACCEPT')}
+                                >
+                                  {decisionBusyId === `${request.id}:ACCEPT` ? 'Submitting...' : 'Accept'}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="dash-menu-item reject-btn"
+                                  disabled={decisionDisabled}
+                                  onClick={() => handleDecision(request.id, 'REJECT')}
+                                >
+                                  {decisionBusyId === `${request.id}:REJECT` ? 'Submitting...' : 'Reject'}
+                                </button>
+                              </div>
+                              {!request.canRespond && (
+                                <p className="dash-notif-wait">
+                                  {userWon ? 'Pending - winner side cannot approve/reject' : 'Pending - waiting for other losing players'}
+                                </p>
+                              )}
+                            </article>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="dash-profile-menu" ref={profileMenuRef}>
+                <button
+                  className="dash-avatar"
+                  onClick={() => {
+                    setProfileMenuOpen((open) => !open);
+                    setNotificationMenuOpen(false);
+                  }}
+                  title="Profile menu"
+                  aria-haspopup="menu"
+                  aria-expanded={profileMenuOpen}
+                >
+                  {profileName.slice(0, 2).toUpperCase()}
+                </button>
+                {profileMenuOpen && (
+                  <div className="dash-menu" role="menu">
+                    <button className="dash-menu-item" onClick={openMatchLogModal} role="menuitem">
+                      Log match
+                    </button>
+                    <button className="dash-menu-item" onClick={handleLogout} role="menuitem">
+                      Log out
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </header>
 
@@ -198,7 +563,6 @@ export default function App() {
             <article className="dash-card accent-blue">
               <p className="tile-label">Rank</p>
               <p className="tile-value">{rank}</p>
-              
             </article>
             <article className="dash-card accent-blue">
               <p className="tile-label">Rating</p>
@@ -222,7 +586,210 @@ export default function App() {
               <p className="tile-sub">{winSummary}</p>
             </article>
           </section>
+
+          <section className="match-log-section">
+            <div className="match-log-header">
+              <h2>Match Log Requests</h2>
+              <button type="button" className="dash-menu-item dash-action-btn" onClick={openMatchLogModal}>
+                Log Match
+              </button>
+            </div>
+
+            {inboxLoading ? (
+              <p className="match-log-empty">Loading match requests...</p>
+            ) : matchLogInbox.length === 0 ? (
+              <p className="match-log-empty">No match log requests yet.</p>
+            ) : (
+              <div className="match-log-list">
+                {matchLogInbox.map((request) => {
+                  const teamNames = request.participants
+                    .filter((participant) => participant.teamSide === 'TEAM')
+                    .map((participant) => participant.username)
+                    .join(', ');
+                  const opponentNames = request.participants
+                    .filter((participant) => participant.teamSide === 'OPPONENT')
+                    .map((participant) => participant.username)
+                    .join(', ');
+                  const myParticipant = request.participants.find((participant) => participant.userId === user.id);
+                  const userWon = myParticipant ? myParticipant.teamSide === request.winnerSide : null;
+                  const showDecisionButtons = request.status === 'PENDING';
+                  const decisionDisabled = decisionBusyId !== null || !request.canRespond;
+
+                  return (
+                    <article key={request.id} className="match-log-card">
+                      <div className="match-log-top">
+                        <p className="match-log-title">{request.matchName}</p>
+                        <span className={`match-log-status status-${request.status.toLowerCase()}`}>
+                          {request.status}
+                        </span>
+                      </div>
+                      <p className="match-log-meta">
+                        {request.matchFormat} | Winner: {request.winnerSide === 'TEAM' ? 'My Team' : 'Opponent Team'}
+                        {request.points ? ` | Points: ${request.points}` : ''}
+                      </p>
+                      <p className="match-log-meta">Created by: {request.createdByUsername}</p>
+                      <p className="match-log-meta">My Team: {teamNames || '-'}</p>
+                      <p className="match-log-meta">Opponent Team: {opponentNames || '-'}</p>
+
+                      {showDecisionButtons && (
+                        <div className="match-log-actions">
+                          <button
+                            type="button"
+                            className="dash-menu-item approve-btn"
+                            disabled={decisionDisabled}
+                            onClick={() => handleDecision(request.id, 'ACCEPT')}
+                          >
+                            {decisionBusyId === `${request.id}:ACCEPT` ? 'Submitting...' : 'Accept'}
+                          </button>
+                          <button
+                            type="button"
+                            className="dash-menu-item reject-btn"
+                            disabled={decisionDisabled}
+                            onClick={() => handleDecision(request.id, 'REJECT')}
+                          >
+                            {decisionBusyId === `${request.id}:REJECT` ? 'Submitting...' : 'Reject'}
+                          </button>
+                        </div>
+                      )}
+                      {showDecisionButtons && !request.canRespond && (
+                        <p className="match-log-meta">
+                          {userWon ? 'Pending - winner side cannot approve/reject' : 'Pending - waiting for other losing players'}
+                        </p>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
         </main>
+
+        {matchLogModalOpen && (
+          <div className="match-log-modal-backdrop" onClick={closeMatchLogModal}>
+            <div className="match-log-modal" onClick={(event) => event.stopPropagation()}>
+              <div className="match-log-header">
+                <h2>Log Match</h2>
+              </div>
+
+              <form className="match-log-form" onSubmit={handleCreateMatchLog}>
+                <div className="match-format-toggle">
+                  <button
+                    type="button"
+                    className={matchFormat === 'SINGLES' ? 'active' : ''}
+                    onClick={() => setMatchFormat('SINGLES')}
+                  >
+                    Singles
+                  </button>
+                  <button
+                    type="button"
+                    className={matchFormat === 'DOUBLES' ? 'active' : ''}
+                    onClick={() => setMatchFormat('DOUBLES')}
+                  >
+                    Doubles
+                  </button>
+                </div>
+                <p className="slot-hint">
+                  {matchFormat === 'DOUBLES' ? 'Doubles: 4 players total (2 vs 2).' : 'Singles: 2 players total (1 vs 1).'}
+                  {' '}Selected {selectedTotalPlayers}/{totalRequiredPlayers}.
+                </p>
+
+                <label>
+                  Match Name
+                  <input
+                    type="text"
+                    value={matchName}
+                    onChange={(event) => setMatchName(event.target.value)}
+                    placeholder="Weekend Smash"
+                    required
+                  />
+                </label>
+
+                <label>
+                  Winner
+                  <select value={winnerSide} onChange={(event) => setWinnerSide(event.target.value)}>
+                    <option value="TEAM">My Team</option>
+                    <option value="OPPONENT">Opponent Team</option>
+                  </select>
+                </label>
+
+                <div className="team-columns">
+                  <div className="team-card">
+                    <h3>My Team ({matchFormat === 'DOUBLES' ? '2' : '1'} players)</h3>
+                    <label className="inline-field">
+                      You
+                      <input type="text" value={profileName} readOnly />
+                    </label>
+                    {matchFormat === 'DOUBLES' && (
+                      <label className="inline-field">
+                        Teammate
+                        <select value={teammateId} onChange={(event) => setTeammateId(event.target.value)}>
+                          <option value="">Select teammate</option>
+                          {teamMateOptions.map((player) => (
+                            <option key={player.id} value={player.id}>{player.username || `Player ${player.id}`}</option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                    <label className="inline-field">
+                      Team Points (Optional)
+                      <input
+                        type="number"
+                        min={0}
+                        value={teamPoints}
+                        onChange={(event) => setTeamPoints(event.target.value)}
+                        placeholder="21"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="team-card">
+                    <h3>Opponent Team ({matchFormat === 'DOUBLES' ? '2' : '1'} players)</h3>
+                    <label className="inline-field">
+                      Opponent 1
+                      <select value={opponentOneId} onChange={(event) => setOpponentOneId(event.target.value)}>
+                        <option value="">Select player</option>
+                        {opponentOneOptions.map((player) => (
+                          <option key={player.id} value={player.id}>{player.username || `Player ${player.id}`}</option>
+                        ))}
+                      </select>
+                    </label>
+                    {matchFormat === 'DOUBLES' && (
+                      <label className="inline-field">
+                        Opponent 2
+                        <select value={opponentTwoId} onChange={(event) => setOpponentTwoId(event.target.value)}>
+                          <option value="">Select player</option>
+                          {opponentTwoOptions.map((player) => (
+                            <option key={player.id} value={player.id}>{player.username || `Player ${player.id}`}</option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                    <label className="inline-field">
+                      Opponent Points (Optional)
+                      <input
+                        type="number"
+                        min={0}
+                        value={opponentPoints}
+                        onChange={(event) => setOpponentPoints(event.target.value)}
+                        placeholder="18"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="match-log-footer">
+                  <div></div>
+                  <button className="primary match-log-submit" type="submit" disabled={matchLogSubmitting}>
+                    {matchLogSubmitting ? 'Submitting...' : 'Create Request'}
+                  </button>
+                  <button type="button" className="match-log-cancel" onClick={closeMatchLogModal}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
