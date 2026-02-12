@@ -43,6 +43,89 @@ export default function App() {
     setStatus({ type: 'info', message: 'Logged out.' });
   }
 
+  if (user) {
+    const profileName = user.username || (user.email ? user.email.split('@')[0] : 'Player');
+    const profileInitials = profileName.slice(0, 2).toUpperCase();
+
+    return (
+      <div className="page page-dashboard">
+        <div className="dash-orb dash-orb-green"></div>
+        <div className="dash-orb dash-orb-blue"></div>
+        <div className="dash-orb dash-orb-red"></div>
+
+        <main className="dashboard-screen">
+          <header className="dashboard-topbar">
+            <div className="dashboard-branding">
+              <p className="eyebrow">Badminton Daddy</p>
+              <h1>Performance Dashboard</h1>
+              <p className="subcopy">Your court form and momentum at a glance.</p>
+            </div>
+
+            <div className="profile-card">
+              <div className="profile-avatar">{profileInitials}</div>
+              <div>
+                <p className="profile-label">User Profile</p>
+                <p className="profile-name">{profileName}</p>
+              </div>
+              <button className="primary profile-logout" onClick={handleLogout}>Log out</button>
+            </div>
+          </header>
+
+          <section className="dashboard-hero">
+            <h2>Ready for your next battle?</h2>
+            <p>Keep your streak alive and sharpen your game this week.</p>
+          </section>
+
+          <section className="dashboard-stats-grid">
+            <article className="dashboard-stat accent-green">
+              <p className="tile-label">Matches Played</p>
+              <p className="tile-value">24</p>
+            </article>
+            <article className="dashboard-stat accent-blue">
+              <p className="tile-label">Win Rate</p>
+              <p className="tile-value">67%</p>
+            </article>
+            <article className="dashboard-stat accent-red">
+              <p className="tile-label">Best Streak</p>
+              <p className="tile-value">5 Wins</p>
+            </article>
+            <article className="dashboard-stat accent-green">
+              <p className="tile-label">Rallies Won</p>
+              <p className="tile-value">142</p>
+            </article>
+          </section>
+
+          <section className="dashboard-panels">
+            <article className="dashboard-panel">
+              <h3>Recent Form</h3>
+              <ul className="form-list">
+                <li><span>Singles</span><strong>W W L W</strong></li>
+                <li><span>Doubles</span><strong>W L W W</strong></li>
+                <li><span>Smash Accuracy</span><strong>73%</strong></li>
+              </ul>
+            </article>
+
+            <article className="dashboard-panel">
+              <h3>Training Focus</h3>
+              <div className="focus-row">
+                <span>Footwork</span>
+                <div className="focus-track"><div className="focus-fill fill-green"></div></div>
+              </div>
+              <div className="focus-row">
+                <span>Drop Shots</span>
+                <div className="focus-track"><div className="focus-fill fill-blue"></div></div>
+              </div>
+              <div className="focus-row">
+                <span>Net Control</span>
+                <div className="focus-track"><div className="focus-fill fill-red"></div></div>
+              </div>
+            </article>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="page">
       <div className="glow"></div>
@@ -70,54 +153,21 @@ export default function App() {
         </section>
 
         <section className="card">
-          {user ? (
-            <div className="dashboard">
-              <div className="dashboard-head">
-                <div>
-                  <h2>Dashboard</h2>
-                  <p>Logged in as {user.email}</p>
-                </div>
-                <button className="primary" onClick={handleLogout}>Log out</button>
-              </div>
-
-              <div className="dashboard-grid">
-                <article className="dashboard-tile">
-                  <p className="tile-label">Matches Played</p>
-                  <p className="tile-value">0</p>
-                </article>
-                <article className="dashboard-tile">
-                  <p className="tile-label">Win Rate</p>
-                  <p className="tile-value">0%</p>
-                </article>
-                <article className="dashboard-tile">
-                  <p className="tile-label">Current Rank</p>
-                  <p className="tile-value">Unranked</p>
-                </article>
-              </div>
-
-              <div className="dashboard-profile">
-                <p className="tile-label">Account</p>
-                <p>User ID: {user.id}</p>
-                <p>Email: {user.email}</p>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="tabs">
-                <button
-                  className={isLogin ? 'active' : ''}
-                  onClick={() => setMode('login')}
-                >
-                  Login
-                </button>
-                <button
-                  className={!isLogin ? 'active' : ''}
-                  onClick={() => setMode('register')}
-                >
-                  Register
-                </button>
-              </div>
-              <form onSubmit={handleSubmit} className="form">
+          <div className="tabs">
+            <button
+              className={isLogin ? 'active' : ''}
+              onClick={() => setMode('login')}
+            >
+              Login
+            </button>
+            <button
+              className={!isLogin ? 'active' : ''}
+              onClick={() => setMode('register')}
+            >
+              Register
+            </button>
+          </div>
+          <form onSubmit={handleSubmit} className="form">
               {isLogin ? (
                 <label>
                   Email or Username
@@ -167,9 +217,7 @@ export default function App() {
               <button className="primary" type="submit" disabled={loading}>
                 {loading ? 'Working...' : isLogin ? 'Login' : 'Create account'}
               </button>
-              </form>
-            </>
-          )}
+          </form>
 
           {status && (
             <div className={`status ${status.type}`} role="status">
