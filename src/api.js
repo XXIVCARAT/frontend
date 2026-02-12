@@ -1,4 +1,6 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const isLocalHost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+const API_BASE = (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.trim())
+  || (isLocalHost ? 'http://localhost:8080' : 'https://badminton-backend-z96t.onrender.com');
 
 function normalizeErrorMessage(message, status) {
   const text = (message || '').toLowerCase();
