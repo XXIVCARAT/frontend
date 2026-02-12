@@ -70,29 +70,54 @@ export default function App() {
         </section>
 
         <section className="card">
-          <div className="tabs">
-            <button
-              className={isLogin ? 'active' : ''}
-              onClick={() => setMode('login')}
-            >
-              Login
-            </button>
-            <button
-              className={!isLogin ? 'active' : ''}
-              onClick={() => setMode('register')}
-            >
-              Register
-            </button>
-          </div>
-
           {user ? (
-            <div className="welcome">
-              <h2>Welcome</h2>
-              <p>{user.email}</p>
-              <button className="primary" onClick={handleLogout}>Log out</button>
+            <div className="dashboard">
+              <div className="dashboard-head">
+                <div>
+                  <h2>Dashboard</h2>
+                  <p>Logged in as {user.email}</p>
+                </div>
+                <button className="primary" onClick={handleLogout}>Log out</button>
+              </div>
+
+              <div className="dashboard-grid">
+                <article className="dashboard-tile">
+                  <p className="tile-label">Matches Played</p>
+                  <p className="tile-value">0</p>
+                </article>
+                <article className="dashboard-tile">
+                  <p className="tile-label">Win Rate</p>
+                  <p className="tile-value">0%</p>
+                </article>
+                <article className="dashboard-tile">
+                  <p className="tile-label">Current Rank</p>
+                  <p className="tile-value">Unranked</p>
+                </article>
+              </div>
+
+              <div className="dashboard-profile">
+                <p className="tile-label">Account</p>
+                <p>User ID: {user.id}</p>
+                <p>Email: {user.email}</p>
+              </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="form">
+            <>
+              <div className="tabs">
+                <button
+                  className={isLogin ? 'active' : ''}
+                  onClick={() => setMode('login')}
+                >
+                  Login
+                </button>
+                <button
+                  className={!isLogin ? 'active' : ''}
+                  onClick={() => setMode('register')}
+                >
+                  Register
+                </button>
+              </div>
+              <form onSubmit={handleSubmit} className="form">
               {isLogin ? (
                 <label>
                   Email or Username
@@ -142,7 +167,8 @@ export default function App() {
               <button className="primary" type="submit" disabled={loading}>
                 {loading ? 'Working...' : isLogin ? 'Login' : 'Create account'}
               </button>
-            </form>
+              </form>
+            </>
           )}
 
           {status && (
