@@ -21,13 +21,18 @@ export default function App() {
     try {
       if (isLogin) {
         const data = await login(identifier, password);
-        setUser(data);
-        setStatus({ type: 'success', message: `Welcome back, ${data.email}` });
+        const loginIdentifier = identifier.trim();
+        const identifierFallback = loginIdentifier && !loginIdentifier.includes('@') ? loginIdentifier : '';
+        const resolvedUsername = (data.username && data.username.trim()) ? data.username : identifierFallback;
+        const resolvedUser = { ...data, username: resolvedUsername || null };
+
+        setUser(resolvedUser);
+        setStatus({ type: 'success', message: `Welcome back, ${resolvedUsername || 'Player'}` });
       } else {
         const data = await register(email, username, password);
-        setStatus({ type: 'success', message: `Account created for ${data.email}. You can log in now.` });
+        setStatus({ type: 'success', message: `Account created for ${data.username || username}. You can log in now.` });
         setMode('login');
-        setIdentifier(email);
+        setIdentifier(data.username || username);
         setUsername('');
       }
       setPassword('');
@@ -44,8 +49,7 @@ export default function App() {
   }
 
   if (user) {
-    const profileName = user.username || (user.email ? user.email.split('@')[0] : 'Player');
-    const profileInitials = profileName.slice(0, 2).toUpperCase();
+    const profileName = user.username || 'Player';
 
     return (
       <div className="page page-dashboard">
@@ -53,72 +57,65 @@ export default function App() {
         <div className="dash-orb dash-orb-blue"></div>
         <div className="dash-orb dash-orb-red"></div>
 
-        <main className="dashboard-screen">
-          <header className="dashboard-topbar">
-            <div className="dashboard-branding">
-              <p className="eyebrow">Badminton Daddy</p>
-              <h1>Performance Dashboard</h1>
-              <p className="subcopy">Your court form and momentum at a glance.</p>
-            </div>
-
-            <div className="profile-card">
-              <div className="profile-avatar">{profileInitials}</div>
-              <div>
-                <p className="profile-label">User Profile</p>
-                <p className="profile-name">{profileName}</p>
-              </div>
-              <button className="primary profile-logout" onClick={handleLogout}>Log out</button>
-            </div>
+        <main className="dashboard-frame">
+          <header className="dash-header">
+            <p className="dash-kicker">BADMINTON DADDY</p>
+            <button className="dash-avatar" onClick={handleLogout} title="Log out">
+              {profileName.slice(0, 2).toUpperCase()}
+            </button>
           </header>
 
-          <section className="dashboard-hero">
+          <section className="dash-intro">
+            <h1>
+              Welcome back {profileName}
+              <span className="dash-badge">DIAMOND</span>
+            </h1>
+            <p>Your court form and momentum at a glance.</p>
+          </section>
+
+          <section className="dash-hero-card">
             <h2>Ready for your next battle?</h2>
             <p>Keep your streak alive and sharpen your game this week.</p>
           </section>
 
-          <section className="dashboard-stats-grid">
-            <article className="dashboard-stat accent-green">
-              <p className="tile-label">Matches Played</p>
-              <p className="tile-value">24</p>
+          <section className="dash-grid dash-grid-top">
+            <article className="dash-card accent-green">
+              <p className="tile-label">Rank</p>
+              <p className="tile-value">4</p>
+              <p className="tile-sub">#4</p>
             </article>
-            <article className="dashboard-stat accent-blue">
-              <p className="tile-label">Win Rate</p>
-              <p className="tile-value">67%</p>
+            <article className="dash-card accent-blue">
+              <p className="tile-label">Rating</p>
+              <p className="tile-value">1850</p>
+              <p className="tile-sub">Primary</p>
             </article>
-            <article className="dashboard-stat accent-red">
-              <p className="tile-label">Best Streak</p>
-              <p className="tile-value">5 Wins</p>
+            <article className="dash-card accent-green">
+              <p className="tile-label">Matches Won</p>
+              <p className="tile-value">16</p>
+              <p className="tile-sub">Total</p>
             </article>
-            <article className="dashboard-stat accent-green">
-              <p className="tile-label">Rallies Won</p>
-              <p className="tile-value">142</p>
+            <article className="dash-card accent-blue">
+              <p className="tile-label">Matches Lost</p>
+              <p className="tile-value">8</p>
+              <p className="tile-sub">Total</p>
             </article>
           </section>
 
-          <section className="dashboard-panels">
-            <article className="dashboard-panel">
-              <h3>Recent Form</h3>
-              <ul className="form-list">
-                <li><span>Singles</span><strong>W W L W</strong></li>
-                <li><span>Doubles</span><strong>W L W W</strong></li>
-                <li><span>Smash Accuracy</span><strong>73%</strong></li>
-              </ul>
+          <section className="dash-grid dash-grid-bottom">
+            <article className="dash-card accent-green">
+              <p className="tile-label">Matches Played</p>
+              <p className="tile-value">24</p>
+              <p className="tile-sub">Total</p>
             </article>
-
-            <article className="dashboard-panel">
-              <h3>Training Focus</h3>
-              <div className="focus-row">
-                <span>Footwork</span>
-                <div className="focus-track"><div className="focus-fill fill-green"></div></div>
-              </div>
-              <div className="focus-row">
-                <span>Drop Shots</span>
-                <div className="focus-track"><div className="focus-fill fill-blue"></div></div>
-              </div>
-              <div className="focus-row">
-                <span>Net Control</span>
-                <div className="focus-track"><div className="focus-fill fill-red"></div></div>
-              </div>
+            <article className="dash-card accent-blue">
+              <p className="tile-label">Matches Won</p>
+              <p className="tile-value">16</p>
+              <p className="tile-sub">Total</p>
+            </article>
+            <article className="dash-card accent-red">
+              <p className="tile-label">Win Rate</p>
+              <p className="tile-value">67%</p>
+              <p className="tile-sub">16W - 8L</p>
             </article>
           </section>
         </main>
