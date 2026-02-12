@@ -13,18 +13,15 @@ const API_BASE = configuredApiBase
 
 function normalizeErrorMessage(message, status, operation) {
   const text = (message || '').toLowerCase();
+  const loginFailureMessage = 'Account doesnot exist Or Password incorrect error';
 
   if (status === 409) {
     if (text.includes('email')) return 'Email id already in use';
     if (text.includes('username')) return 'Username taken';
   }
 
-  if (status === 401 && operation === 'login') {
-    return 'Password invalid';
-  }
-
-  if (status === 404 && operation === 'login') {
-    return 'Account does not exist';
+  if ((status === 401 || status === 404) && operation === 'login') {
+    return loginFailureMessage;
   }
 
   if (status === 400) {
