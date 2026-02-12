@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { login, register } from './api.js';
+import { useEffect, useRef, useState } from 'react';
+import { fetchDashboardStats, fetchSession, login, logout, register } from './api.js';
 
 export default function App() {
   const [mode, setMode] = useState('login');
@@ -9,9 +9,92 @@ export default function App() {
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
 
   const isLogin = mode === 'login';
+
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+
+    function handleDocumentClick(event) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setProfileMenuOpen(false);
+      }
+    }
+
+    function handleEscape(event) {
+      if (event.key === 'Escape') {
+        setProfileMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleDocumentClick);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [profileMenuOpen]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    fetchSession()
+      .then((sessionUser) => {
+        if (!isCancelled && sessionUser?.id) {
+          setUser(sessionUser);
+        }
+      })
+      .catch(() => {
+        if (!isCancelled) {
+          setUser(null);
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setSessionLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setDashboardStats(null);
+      return;
+    }
+
+    let isCancelled = false;
+
+    fetchDashboardStats(user.id)
+      .then((stats) => {
+        if (!isCancelled) {
+          setDashboardStats(stats);
+        }
+      })
+      .catch((error) => {
+        if (!isCancelled) {
+          if (error?.status === 401 || error?.status === 403) {
+            setUser(null);
+            setStatus({ type: 'info', message: 'Session expired. Please log in again.' });
+            return;
+          }
+          setDashboardStats(null);
+          setStatus({ type: 'error', message: error.message || 'Unable to load dashboard stats' });
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [user?.id]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -43,13 +126,38 @@ export default function App() {
     }
   }
 
-  function handleLogout() {
+  async function handleLogout() {
+    setProfileMenuOpen(false);
+
+    try {
+      await logout();
+    } catch {
+      // ignore; local UI state is still cleared below
+    }
+
+    setDashboardStats(null);
     setUser(null);
     setStatus({ type: 'info', message: 'Logged out.' });
   }
 
+  if (sessionLoading) {
+    return (
+      <div className="page">
+        <div className="glow"></div>
+      </div>
+    );
+  }
+
   if (user) {
     const profileName = user.username || 'Player';
+    const tier = dashboardStats?.tier || 'DIAMOND';
+    const rank = dashboardStats?.rank ?? 0;
+    const rating = dashboardStats?.rating ?? 0;
+    const matchesPlayed = dashboardStats?.matchesPlayed ?? 0;
+    const matchesWon = dashboardStats?.matchesWon ?? 0;
+    const matchesLost = dashboardStats?.matchesLost ?? 0;
+    const winRate = `${dashboardStats?.winRate ?? 0}%`;
+    const winSummary = `${dashboardStats?.matchesWon ?? 0}W - ${dashboardStats?.matchesLost ?? 0}L`;
 
     return (
       <div className="page page-dashboard">
@@ -59,63 +167,59 @@ export default function App() {
 
         <main className="dashboard-frame">
           <header className="dash-header">
-            <p className="dash-kicker">BADMINTON DADDY</p>
-            <button className="dash-avatar" onClick={handleLogout} title="Log out">
-              {profileName.slice(0, 2).toUpperCase()}
-            </button>
+            <div className="dash-user-info">
+              <p className="dash-kicker">BADMINTON DADDY</p>
+              <p className="dash-user-title">
+                <span className="dash-name-box">{profileName}</span>
+                <span className="dash-badge">{tier}</span>
+              </p>
+            </div>
+            <div className="dash-profile-menu" ref={profileMenuRef}>
+              <button
+                className="dash-avatar"
+                onClick={() => setProfileMenuOpen((open) => !open)}
+                title="Profile menu"
+                aria-haspopup="menu"
+                aria-expanded={profileMenuOpen}
+              >
+                {profileName.slice(0, 2).toUpperCase()}
+              </button>
+              {profileMenuOpen && (
+                <div className="dash-menu" role="menu">
+                  <button className="dash-menu-item" onClick={handleLogout} role="menuitem">
+                    Log out
+                  </button>
+                </div>
+              )}
+            </div>
           </header>
 
-          <section className="dash-intro">
-            <h1>
-              Welcome back {profileName}
-              <span className="dash-badge">DIAMOND</span>
-            </h1>
-            <p>Your court form and momentum at a glance.</p>
-          </section>
-
-          <section className="dash-hero-card">
-            <h2>Ready for your next battle?</h2>
-            <p>Keep your streak alive and sharpen your game this week.</p>
-          </section>
-
-          <section className="dash-grid dash-grid-top">
-            <article className="dash-card accent-green">
+          <section className="dash-grid dash-grid-single">
+            <article className="dash-card accent-blue">
               <p className="tile-label">Rank</p>
-              <p className="tile-value">4</p>
-              <p className="tile-sub">#4</p>
+              <p className="tile-value">{rank}</p>
+              
             </article>
             <article className="dash-card accent-blue">
               <p className="tile-label">Rating</p>
-              <p className="tile-value">1850</p>
-              <p className="tile-sub">Primary</p>
+              <p className="tile-value">{rating}</p>
             </article>
-            <article className="dash-card accent-green">
-              <p className="tile-label">Matches Won</p>
-              <p className="tile-value">16</p>
-              <p className="tile-sub">Total</p>
-            </article>
-            <article className="dash-card accent-blue">
-              <p className="tile-label">Matches Lost</p>
-              <p className="tile-value">8</p>
-              <p className="tile-sub">Total</p>
-            </article>
-          </section>
-
-          <section className="dash-grid dash-grid-bottom">
             <article className="dash-card accent-green">
               <p className="tile-label">Matches Played</p>
-              <p className="tile-value">24</p>
-              <p className="tile-sub">Total</p>
+              <p className="tile-value">{matchesPlayed}</p>
             </article>
-            <article className="dash-card accent-blue">
+            <article className="dash-card accent-green-strong is-win">
               <p className="tile-label">Matches Won</p>
-              <p className="tile-value">16</p>
-              <p className="tile-sub">Total</p>
+              <p className="tile-value">{matchesWon}</p>
+            </article>
+            <article className="dash-card accent-red is-loss">
+              <p className="tile-label">Matches Lost</p>
+              <p className="tile-value">{matchesLost}</p>
             </article>
             <article className="dash-card accent-red">
               <p className="tile-label">Win Rate</p>
-              <p className="tile-value">67%</p>
-              <p className="tile-sub">16W - 8L</p>
+              <p className="tile-value">{winRate}</p>
+              <p className="tile-sub">{winSummary}</p>
             </article>
           </section>
         </main>

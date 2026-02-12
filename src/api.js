@@ -35,6 +35,15 @@ function normalizeErrorMessage(message, status, operation) {
 
 async function handleResponse(response, operation) {
   if (response.ok) {
+    if (response.status === 204) {
+      return null;
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.toLowerCase().includes('application/json')) {
+      return null;
+    }
+
     return response.json();
   }
 
@@ -73,6 +82,7 @@ async function handleResponse(response, operation) {
 export async function login(identifier, password) {
   const response = await fetch(`${API_BASE}/api/auth/login`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify({ identifier, password })
   });
@@ -83,9 +93,40 @@ export async function login(identifier, password) {
 export async function register(email, username, password) {
   const response = await fetch(`${API_BASE}/api/auth/register`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify({ email, username, password })
   });
 
   return handleResponse(response, 'register');
+}
+
+export async function fetchDashboardStats(userId) {
+  const response = await fetch(`${API_BASE}/api/users/${userId}/stats`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  return handleResponse(response, 'stats');
+}
+
+export async function fetchSession() {
+  const response = await fetch(`${API_BASE}/api/auth/me`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  return handleResponse(response, 'session');
+}
+
+export async function logout() {
+  const response = await fetch(`${API_BASE}/api/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  return handleResponse(response, 'logout');
 }
