@@ -1244,14 +1244,14 @@ button.primary:disabled {
 
 .rank-columns {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  align-items: center;
-  justify-items: center;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  align-items: start;
+  justify-items: start;
 }
 
 .rank-column {
-  text-align: center;
+  text-align: left;
   display: grid;
   gap: 4px;
 }
