@@ -1248,6 +1248,21 @@ button.primary:disabled {
   gap: 12px;
 }
 
+.rank-center {
+  flex: 1;
+  text-align: center;
+}
+
+.rank-record-label {
+  margin-bottom: 2px;
+}
+
+.rank-record {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
 .rank-meta {
   text-align: right;
 }

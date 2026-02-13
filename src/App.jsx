@@ -61,11 +61,11 @@ export default function App() {
   ];
 
   const tierIcons = {
-    BRONZE: '🥉',
-    SILVER: '🥈',
-    GOLD: '🥇',
-    PLATINUM: '⛤',
-    DIAMOND: '◆'
+    BRONZE: '⬟',
+    SILVER: '⬢',
+    GOLD: '⬣',
+    PLATINUM: '⬠',
+    DIAMOND: '⬡'
   };
 
   const isLogin = mode === 'login';
@@ -538,12 +538,15 @@ export default function App() {
                   <span className="rank-badge">#{row.rank}</span>
                   <div className="rank-user">
                     <p className="rank-name">{row.username}</p>
-                    <p className="rank-label">
-                      <span className="rank-win">{row.wins}W</span>
-                      <span className="rank-sep"> • </span>
-                      <span className="rank-loss">{row.losses}L</span>
-                    </p>
                   </div>
+                </div>
+                <div className="rank-center">
+                  <p className="rank-label rank-record-label">Record</p>
+                  <p className="rank-record">
+                    <span className="rank-win">{row.wins}W</span>
+                    <span className="rank-sep"> • </span>
+                    <span className="rank-loss">{row.losses}L</span>
+                  </p>
                 </div>
                 <div className="rank-right">
                   <div className="rank-meta">
