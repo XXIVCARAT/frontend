@@ -1242,18 +1242,17 @@ button.primary:disabled {
   padding: 0 6px;
 }
 
-.rank-columns {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-  align-items: start;
-  justify-items: start;
+.rank-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
 }
 
-.rank-column {
-  text-align: left;
+.rank-stat {
   display: grid;
-  gap: 4px;
+  gap: 2px;
+  text-align: left;
 }
 
 .rank-record-label {
