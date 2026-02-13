@@ -1247,10 +1247,13 @@ button.primary:disabled {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   align-items: center;
+  justify-items: center;
 }
 
 .rank-column {
   text-align: center;
+  display: grid;
+  gap: 4px;
 }
 
 .rank-record-label {
