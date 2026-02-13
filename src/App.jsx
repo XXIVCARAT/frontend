@@ -523,6 +523,7 @@ export default function App() {
       return (
         <div className="page page-dashboard">
           <section className="rank-list">
+            <h2 className="rank-title">Leaderboard</h2>
             {rankingMock.map((row) => (
               <article key={row.rank} className="rank-card">
                 <div className="rank-left">

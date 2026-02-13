@@ -1174,6 +1174,13 @@ button.primary:disabled {
   width: min(800px, 92vw);
 }
 
+.rank-title {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
 .rank-card {
   display: flex;
   align-items: center;
