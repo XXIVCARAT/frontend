@@ -950,7 +950,7 @@ button.primary:disabled {
 .tab-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.05);
   color: var(--text);
@@ -976,6 +976,10 @@ button.primary:disabled {
   width: 18px;
   height: 18px;
   fill: currentColor;
+}
+
+.tab-label {
+  font-size: 0.9rem;
 }
 
 @media (max-width: 720px) {
