@@ -1167,28 +1167,6 @@ button.primary:disabled {
   color: var(--muted);
 }
 
-.rank-hero {
-  text-align: center;
-  margin: 24px auto 12px;
-}
-
-.rank-kicker {
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.18rem;
-  font-size: 0.72rem;
-  color: var(--muted);
-}
-
-.rank-hero h1 {
-  margin: 6px 0 8px;
-}
-
-.rank-sub {
-  margin: 0;
-  color: var(--muted);
-}
-
 .rank-list {
   display: grid;
   gap: 12px;

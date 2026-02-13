@@ -522,12 +522,6 @@ export default function App() {
     if (activeTab === 'rank') {
       return (
         <div className="page page-dashboard">
-          <div className="rank-hero">
-            <p className="rank-kicker">Leaderboard</p>
-            <h1>Club Ranking</h1>
-            <p className="rank-sub">See how you stack up. Ratings update when matches are approved.</p>
-          </div>
-
           <section className="rank-list">
             {rankingMock.map((row) => (
               <article key={row.rank} className="rank-card">
