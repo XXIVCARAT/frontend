@@ -1171,7 +1171,7 @@ button.primary:disabled {
   display: grid;
   gap: 12px;
   margin: 12px auto 20px;
-  width: min(800px, 92vw);
+  width: min(1200px, 98vw);
 }
 
 .rank-title {
@@ -1183,17 +1183,19 @@ button.primary:disabled {
 
 .rank-card {
   display: grid;
-  grid-template-columns: 100px 1fr;
-  align-items: center;
-  gap: 14px;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+  align-items: start;
+  gap: 8px;
   padding: 12px 14px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  width: 100%;
 }
 
-.rank-left {
+.rank-header {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1244,9 +1246,9 @@ button.primary:disabled {
 
 .rank-stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
   gap: 10px 14px;
-  align-items: center;
+  align-items: start;
 }
 
 .rank-stat {

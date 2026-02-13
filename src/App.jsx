@@ -534,11 +534,9 @@ export default function App() {
             <h2 className="rank-title">Leaderboard</h2>
             {rankingMock.map((row) => (
               <article key={row.rank} className="rank-card">
-                <div className="rank-left">
+                <div className="rank-header">
                   <span className="rank-badge">#{row.rank}</span>
-                  <div className="rank-user">
-                    <p className="rank-name">{row.username}</p>
-                  </div>
+                  <p className="rank-name">{row.username}</p>
                 </div>
                 <div className="rank-stats">
                   <div className="rank-stat">
