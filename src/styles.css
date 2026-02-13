@@ -1258,6 +1258,49 @@ button.primary:disabled {
   font-weight: 800;
 }
 
+.rank-tier {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rank-tier-icon {
+  font-size: 1rem;
+}
+
+.rank-tier-bronze {
+  color: #c17c3a;
+  border-color: rgba(193, 124, 58, 0.5);
+  background: rgba(193, 124, 58, 0.14);
+}
+
+.rank-tier-silver {
+  color: #cfd5de;
+  border-color: rgba(207, 213, 222, 0.5);
+  background: rgba(207, 213, 222, 0.14);
+}
+
+.rank-tier-gold {
+  color: #ffd54f;
+  border-color: rgba(255, 213, 79, 0.55);
+  background: rgba(255, 213, 79, 0.16);
+}
+
+.rank-tier-platinum {
+  color: #9bd5ff;
+  border-color: rgba(155, 213, 255, 0.55);
+  background: rgba(155, 213, 255, 0.14);
+}
+
+.rank-tier-diamond {
+  color: #c89bff;
+  border-color: rgba(200, 155, 255, 0.55);
+  background: rgba(200, 155, 255, 0.16);
+}
 @media (max-width: 720px) {
   .shell {
     grid-template-columns: 1fr;
