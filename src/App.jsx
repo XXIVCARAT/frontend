@@ -804,12 +804,6 @@ export default function App() {
         )}
 
         <nav className="bottom-tabs" aria-label="Primary">
-          <button className="tab-btn active" type="button">
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="tab-icon">
-              <path d="M12 5.3 5 10.7V20h4v-4.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V20h4v-9.3L12 5.3Zm0-2.5 9 7V21a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-4h-2v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-11l9-7Z" />
-            </svg>
-            Home
-          </button>
           <button className="tab-btn" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true" className="tab-icon">
               <path d="M12 2 3 6v5c0 5 3.8 9.7 9 11 5.2-1.3 9-6 9-11V6l-9-4Zm0 2.2 7 3.1v3.7c0 4.1-2.7 7.9-7 9.3-4.3-1.4-7-5.2-7-9.3V7.3l7-3.1Zm0 3.8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm0 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z" />
@@ -821,6 +815,12 @@ export default function App() {
               <path d="M4 6a4 4 0 1 1 7.1 2.5 5 5 0 0 1 1.8 0A4 4 0 1 1 20 10a4 4 0 0 1-1.6-.3 5 5 0 0 1 0 4.6A4 4 0 1 1 12.9 18a5 5 0 0 1-1.8 0A4 4 0 1 1 4 14a4 4 0 0 1 1.6.3 5 5 0 0 1 0-4.6A4 4 0 0 1 4 6Zm3 0a2 2 0 1 0-4 0 2 2 0 0 0 4 0Zm7 8a2 2 0 1 0 4 0 2 2 0 0 0-4 0Zm-7 0a2 2 0 1 0-4 0 2 2 0 0 0 4 0Zm7-8a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z" />
             </svg>
             Social
+          </button>
+          <button className="tab-btn active" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="tab-icon">
+              <path d="M12 5.3 5 10.7V20h4v-4.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V20h4v-9.3L12 5.3Zm0-2.5 9 7V21a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-4h-2v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-11l9-7Z" />
+            </svg>
+            Home
           </button>
         </nav>
       </div>
