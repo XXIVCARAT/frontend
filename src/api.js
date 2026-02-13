@@ -182,3 +182,13 @@ export async function fetchMatchHistory() {
 
   return handleResponse(response, 'match-history');
 }
+
+export async function fetchLeaderboard() {
+  const response = await fetch(`${API_BASE}/api/leaderboard`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  return handleResponse(response, 'leaderboard');
+}

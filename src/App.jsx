@@ -4,6 +4,7 @@ import {
   fetchDashboardStats,
   fetchMatchLogInbox,
   fetchMatchHistory,
+  fetchLeaderboard,
   fetchPlayers,
   fetchSession,
   login,
@@ -52,13 +53,9 @@ export default function App() {
   const [opponentOneId, setOpponentOneId] = useState('');
   const [opponentTwoId, setOpponentTwoId] = useState('');
   const [activeTab, setActiveTab] = useState('home');
-  const rankingMock = [
-    { rank: 1, username: 'xxivcarat', rating: 1865, wins: 27, losses: 9, winRate: 75, tier: 'DIAMOND' },
-    { rank: 2, username: 'pop', rating: 1750, wins: 22, losses: 11, winRate: 67, tier: 'PLATINUM' },
-    { rank: 3, username: 'suhalshetty99', rating: 1620, wins: 18, losses: 12, winRate: 60, tier: 'GOLD' },
-    { rank: 4, username: 'xcx', rating: 1490, wins: 16, losses: 19, winRate: 46, tier: 'SILVER' },
-    { rank: 5, username: 'efecc', rating: 1380, wins: 12, losses: 15, winRate: 44, tier: 'BRONZE' },
-  ];
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [leaderboardError, setLeaderboardError] = useState(null);
 
   const tierIcons = {
     BRONZE: '⬟',
@@ -254,6 +251,35 @@ export default function App() {
       isCancelled = true;
     };
   }, [user?.id, historyVersion, inboxVersion]);
+
+  useEffect(() => {
+    if (!user?.id || activeTab !== 'rank') {
+      return;
+    }
+    let cancelled = false;
+    setLeaderboardLoading(true);
+    setLeaderboardError(null);
+    fetchLeaderboard()
+      .then((rows) => {
+        if (!cancelled) {
+          setLeaderboard(Array.isArray(rows) ? rows : []);
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setLeaderboard([]);
+          setLeaderboardError(error?.message || 'Unable to load leaderboard');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLeaderboardLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, activeTab]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -532,7 +558,14 @@ export default function App() {
         <div className="page page-dashboard">
           <section className="rank-list">
             <h2 className="rank-title">Leaderboard</h2>
-            {rankingMock.map((row) => (
+            {leaderboardLoading ? (
+              <p className="rank-label">Loading leaderboard...</p>
+            ) : leaderboardError ? (
+              <p className="rank-label">Error: {leaderboardError}</p>
+            ) : leaderboard.length === 0 ? (
+              <p className="rank-label">No players yet.</p>
+            ) : (
+              leaderboard.map((row) => (
               <article key={row.rank} className="rank-card">
                 <div className="rank-header">
                   <span className="rank-badge">#{row.rank}</span>
@@ -564,7 +597,7 @@ export default function App() {
                   </div>
                 </div>
               </article>
-            ))}
+            )))}
           </section>
 
           <nav className="bottom-tabs" aria-label="Primary">
