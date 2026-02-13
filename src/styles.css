@@ -1183,7 +1183,7 @@ button.primary:disabled {
 
 .rank-card {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 100px 1fr;
   align-items: center;
   gap: 14px;
   padding: 12px 14px;
@@ -1243,10 +1243,10 @@ button.primary:disabled {
 }
 
 .rank-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 10px 14px;
+  align-items: center;
 }
 
 .rank-stat {
