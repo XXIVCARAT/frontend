@@ -1182,9 +1182,9 @@ button.primary:disabled {
 }
 
 .rank-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 14px;
   padding: 12px 14px;
   border-radius: 14px;
@@ -1242,14 +1242,14 @@ button.primary:disabled {
   padding: 0 6px;
 }
 
-.rank-right {
-  display: flex;
-  align-items: center;
+.rank-columns {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+  align-items: center;
 }
 
-.rank-center {
-  flex: 1;
+.rank-column {
   text-align: center;
 }
 

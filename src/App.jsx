@@ -540,27 +540,30 @@ export default function App() {
                     <p className="rank-name">{row.username}</p>
                   </div>
                 </div>
-                <div className="rank-center">
-                  <p className="rank-label rank-record-label">Record</p>
-                  <p className="rank-record">
-                    <span className="rank-win">{row.wins}W</span>
-                    <span className="rank-sep"> • </span>
-                    <span className="rank-loss">{row.losses}L</span>
-                  </p>
-                </div>
-                <div className="rank-right">
-                  <div className="rank-meta">
+                <div className="rank-columns">
+                  <div className="rank-column">
+                    <p className="rank-label rank-record-label">Record</p>
+                    <p className="rank-record">
+                      <span className="rank-win">{row.wins}W</span>
+                      <span className="rank-sep"> • </span>
+                      <span className="rank-loss">{row.losses}L</span>
+                    </p>
+                  </div>
+                  <div className="rank-column">
                     <p className="rank-label">Win Rate</p>
                     <p className="rank-rating">{row.winRate}%</p>
                   </div>
-                  <div className="rank-meta">
+                  <div className="rank-column">
                     <p className="rank-label">Rating</p>
                     <p className="rank-rating">{row.rating}</p>
                   </div>
-                  <span className={`rank-tier rank-tier-${row.tier.toLowerCase()}`}>
-                    <span className="rank-tier-icon">{tierIcons[row.tier] || '★'}</span>
-                    {row.tier}
-                  </span>
+                  <div className="rank-column">
+                    <p className="rank-label">Tier</p>
+                    <span className={`rank-tier rank-tier-${row.tier.toLowerCase()}`}>
+                      <span className="rank-tier-icon">{tierIcons[row.tier] || '★'}</span>
+                      {row.tier}
+                    </span>
+                  </div>
                 </div>
               </article>
             ))}
