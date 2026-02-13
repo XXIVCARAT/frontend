@@ -1181,6 +1181,41 @@ button.primary:disabled {
   color: var(--text);
 }
 
+.rank-loading {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.rank-loading-bars {
+  display: inline-flex;
+  gap: 6px;
+  align-items: flex-end;
+  height: 40px;
+}
+
+.rank-bar {
+  width: 8px;
+  background: linear-gradient(180deg, #82f6c2, #53d0a5);
+  border-radius: 4px 4px 2px 2px;
+  animation: rankBarPulse 1s ease-in-out infinite;
+}
+
+.rank-bar.bar1 { animation-delay: 0s; }
+.rank-bar.bar2 { animation-delay: 0.1s; }
+.rank-bar.bar3 { animation-delay: 0.2s; }
+.rank-bar.bar4 { animation-delay: 0.3s; }
+.rank-bar.bar5 { animation-delay: 0.4s; }
+
+@keyframes rankBarPulse {
+  0%   { height: 12px; opacity: 0.6; }
+  25%  { height: 28px; opacity: 0.85; }
+  50%  { height: 38px; opacity: 1; }
+  75%  { height: 24px; opacity: 0.8; }
+  100% { height: 12px; opacity: 0.6; }
+}
+
 .rank-card {
   display: grid;
   grid-template-columns: 1fr;

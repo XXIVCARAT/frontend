@@ -559,7 +559,16 @@ export default function App() {
           <section className="rank-list">
             <h2 className="rank-title">Leaderboard</h2>
             {leaderboardLoading ? (
-              <p className="rank-label">Loading leaderboard...</p>
+              <div className="rank-loading">
+                <div className="rank-loading-bars">
+                  <span className="rank-bar bar1"></span>
+                  <span className="rank-bar bar2"></span>
+                  <span className="rank-bar bar3"></span>
+                  <span className="rank-bar bar4"></span>
+                  <span className="rank-bar bar5"></span>
+                </div>
+                <p className="rank-label">Loading leaderboard...</p>
+              </div>
             ) : leaderboardError ? (
               <p className="rank-label">Error: {leaderboardError}</p>
             ) : leaderboard.length === 0 ? (
