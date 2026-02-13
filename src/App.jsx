@@ -53,11 +53,11 @@ export default function App() {
   const [opponentTwoId, setOpponentTwoId] = useState('');
   const [activeTab, setActiveTab] = useState('home');
   const rankingMock = [
-    { rank: 1, username: 'xxivcarat', rating: 1865, tier: 'PLATINUM' },
-    { rank: 2, username: 'pop', rating: 1750, tier: 'GOLD' },
-    { rank: 3, username: 'suhalshetty99', rating: 1620, tier: 'GOLD' },
-    { rank: 4, username: 'xcx', rating: 1490, tier: 'SILVER' },
-    { rank: 5, username: 'efecc', rating: 1380, tier: 'SILVER' },
+    { rank: 1, username: 'xxivcarat', rating: 1865, wins: 27, losses: 9, winRate: 75 },
+    { rank: 2, username: 'pop', rating: 1750, wins: 22, losses: 11, winRate: 67 },
+    { rank: 3, username: 'suhalshetty99', rating: 1620, wins: 18, losses: 12, winRate: 60 },
+    { rank: 4, username: 'xcx', rating: 1490, wins: 16, losses: 19, winRate: 46 },
+    { rank: 5, username: 'efecc', rating: 1380, wins: 12, losses: 15, winRate: 44 },
   ];
 
   const isLogin = mode === 'login';
@@ -530,15 +530,22 @@ export default function App() {
                   <span className="rank-badge">#{row.rank}</span>
                   <div className="rank-user">
                     <p className="rank-name">{row.username}</p>
-                    <p className="rank-label">Tier</p>
+                    <p className="rank-label">
+                      <span className="rank-win">{row.wins}W</span>
+                      <span className="rank-sep"> • </span>
+                      <span className="rank-loss">{row.losses}L</span>
+                    </p>
                   </div>
                 </div>
                 <div className="rank-right">
                   <div className="rank-meta">
+                    <p className="rank-label">Win Rate</p>
+                    <p className="rank-rating">{row.winRate}%</p>
+                  </div>
+                  <div className="rank-meta">
                     <p className="rank-label">Rating</p>
                     <p className="rank-rating">{row.rating}</p>
                   </div>
-                  <span className={`rank-tier rank-tier-${row.tier.toLowerCase()}`}>{row.tier}</span>
                 </div>
               </article>
             ))}

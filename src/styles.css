@@ -1227,6 +1227,21 @@ button.primary:disabled {
   color: var(--muted);
 }
 
+.rank-win {
+  color: #82f6c2;
+  font-weight: 700;
+}
+
+.rank-loss {
+  color: #ff7b7b;
+  font-weight: 700;
+}
+
+.rank-sep {
+  color: var(--muted);
+  padding: 0 6px;
+}
+
 .rank-right {
   display: flex;
   align-items: center;
@@ -1241,31 +1256,6 @@ button.primary:disabled {
   margin: 0;
   font-size: 1.6rem;
   font-weight: 800;
-}
-
-.rank-tier {
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  font-weight: 700;
-}
-
-.rank-tier-platinum {
-  border-color: rgba(130, 246, 194, 0.5);
-  color: #82f6c2;
-  background: rgba(130, 246, 194, 0.12);
-}
-
-.rank-tier-gold {
-  border-color: rgba(255, 215, 140, 0.5);
-  color: #ffd78c;
-  background: rgba(255, 215, 140, 0.12);
-}
-
-.rank-tier-silver {
-  border-color: rgba(200, 213, 230, 0.4);
-  color: #d6e3ff;
-  background: rgba(200, 213, 230, 0.12);
 }
 
 @media (max-width: 720px) {
