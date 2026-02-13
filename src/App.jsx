@@ -3,6 +3,7 @@ import {
   createMatchLogRequest,
   fetchDashboardStats,
   fetchMatchLogInbox,
+  fetchMatchHistory,
   fetchPlayers,
   fetchSession,
   login,
@@ -36,6 +37,9 @@ export default function App() {
   const [matchLogInbox, setMatchLogInbox] = useState([]);
   const [inboxVersion, setInboxVersion] = useState(0);
   const [decisionBusyId, setDecisionBusyId] = useState(null);
+  const [matchHistory, setMatchHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyVersion, setHistoryVersion] = useState(0);
 
   const [matchLogModalOpen, setMatchLogModalOpen] = useState(false);
   const [matchLogSubmitting, setMatchLogSubmitting] = useState(false);
@@ -200,6 +204,42 @@ export default function App() {
   }, [user?.id, inboxVersion]);
 
   useEffect(() => {
+    if (!user?.id) {
+      setMatchHistory([]);
+      return;
+    }
+
+    let isCancelled = false;
+    setHistoryLoading(true);
+
+    fetchMatchHistory()
+      .then((rows) => {
+        if (!isCancelled) {
+          setMatchHistory(Array.isArray(rows) ? rows : []);
+        }
+      })
+      .catch((error) => {
+        if (!isCancelled) {
+          if (error?.status === 401 || error?.status === 403) {
+            setUser(null);
+            setStatus({ type: 'info', message: 'Session expired. Please log in again.' });
+            return;
+          }
+          setStatus({ type: 'error', message: error.message || 'Unable to load match history' });
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setHistoryLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [user?.id, historyVersion, inboxVersion]);
+
+  useEffect(() => {
     if (!user?.id) return;
     if (matchFormat === 'SINGLES') {
       setTeammateId('');
@@ -346,6 +386,7 @@ export default function App() {
       setStatus({ type: 'success', message: `Match request ${decision === 'ACCEPT' ? 'accepted' : 'rejected'}.` });
       setInboxVersion((v) => v + 1);
       setStatsVersion((v) => v + 1);
+      setHistoryVersion((v) => v + 1);
     } catch (error) {
       setStatus({ type: 'error', message: error.message || 'Unable to submit decision' });
     } finally {
@@ -365,6 +406,7 @@ export default function App() {
 
     setDashboardStats(null);
     setMatchLogInbox([]);
+    setMatchHistory([]);
     setPlayers([]);
     setMatchLogModalOpen(false);
     setUser(null);
@@ -587,75 +629,45 @@ export default function App() {
             </article>
           </section>
 
-          <section className="match-log-section">
-            <div className="match-log-header">
-              <h2>Match Log Requests</h2>
+          <section className="match-history-section">
+            <div className="match-history-header">
+              <h2>Match History</h2>
               <button type="button" className="dash-menu-item dash-action-btn" onClick={openMatchLogModal}>
                 Log Match
               </button>
             </div>
 
-            {inboxLoading ? (
-              <p className="match-log-empty">Loading match requests...</p>
-            ) : matchLogInbox.length === 0 ? (
-              <p className="match-log-empty">No match log requests yet.</p>
+            {historyLoading ? (
+              <p className="match-history-empty">Loading match history...</p>
+            ) : matchHistory.length === 0 ? (
+              <p className="match-history-empty">No approved matches yet.</p>
             ) : (
-              <div className="match-log-list">
-                {matchLogInbox.map((request) => {
-                  const teamNames = request.participants
-                    .filter((participant) => participant.teamSide === 'TEAM')
-                    .map((participant) => participant.username)
-                    .join(', ');
-                  const opponentNames = request.participants
-                    .filter((participant) => participant.teamSide === 'OPPONENT')
-                    .map((participant) => participant.username)
-                    .join(', ');
-                  const myParticipant = request.participants.find((participant) => participant.userId === user.id);
-                  const userWon = myParticipant ? myParticipant.teamSide === request.winnerSide : null;
-                  const showDecisionButtons = request.status === 'PENDING';
-                  const decisionDisabled = decisionBusyId !== null || !request.canRespond;
+              <div className="match-history-list">
+                {matchHistory.map((item) => {
+                  const myTeamList = item.userTeamSide === 'TEAM' ? item.teamUsernames : item.opponentUsernames;
+                  const oppList = item.userTeamSide === 'TEAM' ? item.opponentUsernames : item.teamUsernames;
+                  const userTeamNames = (myTeamList || []).join(', ') || '-';
+                  const opponentNames = (oppList || []).join(', ') || '-';
+                  const winnerLabel = item.winnerSide === item.userTeamSide ? 'My Team' : 'Opponent Team';
+                  const pointsText = item.points ? `Points: ${item.points}` : 'Points: Not provided';
+                  const dateText = item.createdAt ? new Date(item.createdAt).toLocaleString() : '';
 
                   return (
-                    <article key={request.id} className="match-log-card">
-                      <div className="match-log-top">
-                        <p className="match-log-title">{request.matchName}</p>
-                        <span className={`match-log-status status-${request.status.toLowerCase()}`}>
-                          {request.status}
-                        </span>
-                      </div>
-                      <p className="match-log-meta">
-                        {request.matchFormat} | Winner: {request.winnerSide === 'TEAM' ? 'My Team' : 'Opponent Team'}
-                        {request.points ? ` | Points: ${request.points}` : ''}
-                      </p>
-                      <p className="match-log-meta">Created by: {request.createdByUsername}</p>
-                      <p className="match-log-meta">My Team: {teamNames || '-'}</p>
-                      <p className="match-log-meta">Opponent Team: {opponentNames || '-'}</p>
-
-                      {showDecisionButtons && (
-                        <div className="match-log-actions">
-                          <button
-                            type="button"
-                            className="dash-menu-item approve-btn"
-                            disabled={decisionDisabled}
-                            onClick={() => handleDecision(request.id, 'ACCEPT')}
-                          >
-                            {decisionBusyId === `${request.id}:ACCEPT` ? 'Submitting...' : 'Accept'}
-                          </button>
-                          <button
-                            type="button"
-                            className="dash-menu-item reject-btn"
-                            disabled={decisionDisabled}
-                            onClick={() => handleDecision(request.id, 'REJECT')}
-                          >
-                            {decisionBusyId === `${request.id}:REJECT` ? 'Submitting...' : 'Reject'}
-                          </button>
+                    <article key={item.id} className={`match-history-card ${item.userWon ? 'win' : 'loss'}`}>
+                      <div className="match-history-top">
+                        <div>
+                          <p className="match-history-title">{item.matchName}</p>
+                          <p className="match-history-meta">
+                            {item.matchFormat} | Winner: {winnerLabel}
+                          </p>
                         </div>
-                      )}
-                      {showDecisionButtons && !request.canRespond && (
-                        <p className="match-log-meta">
-                          {userWon ? 'Pending - winner side cannot approve/reject' : 'Pending - waiting for other losing players'}
-                        </p>
-                      )}
+                        <span className="match-history-badge">{item.userWon ? 'WIN' : 'LOSS'}</span>
+                      </div>
+                      <p className="match-history-meta">{pointsText}</p>
+                      <p className="match-history-meta">Created by: {item.createdByUsername}</p>
+                      <p className="match-history-meta">My Team: {userTeamNames}</p>
+                      <p className="match-history-meta">Opponent Team: {opponentNames}</p>
+                      <p className="match-history-meta">Logged on: {dateText}</p>
                     </article>
                   );
                 })}

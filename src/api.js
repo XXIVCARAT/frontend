@@ -172,3 +172,13 @@ export async function respondToMatchLogRequest(requestId, decision) {
 
   return handleResponse(response, 'respond-match-log');
 }
+
+export async function fetchMatchHistory() {
+  const response = await fetch(`${API_BASE}/api/match-log/requests/history`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  return handleResponse(response, 'match-history');
+}
