@@ -647,28 +647,46 @@ export default function App() {
                 {matchHistory.map((item) => {
                   const myTeamList = item.userTeamSide === 'TEAM' ? item.teamUsernames : item.opponentUsernames;
                   const oppList = item.userTeamSide === 'TEAM' ? item.opponentUsernames : item.teamUsernames;
-                  const userTeamNames = (myTeamList || []).join(', ') || '-';
-                  const opponentNames = (oppList || []).join(', ') || '-';
-                  const winnerLabel = item.winnerSide === item.userTeamSide ? 'My Team' : 'Opponent Team';
-                  const pointsText = item.points ? `Points: ${item.points}` : 'Points: Not provided';
-                  const dateText = item.createdAt ? new Date(item.createdAt).toLocaleString() : '';
+                  const myNames = Array.isArray(myTeamList) ? myTeamList : [];
+                  const oppNames = Array.isArray(oppList) ? oppList : [];
+                  const scoreParts = (item.points || '').split('-').map((p) => p.trim()).filter(Boolean);
+                  const scoreDisplay = scoreParts.length === 2 ? `${scoreParts[0]} - ${scoreParts[1]}` : '—';
+                  const dateText = item.createdAt
+                    ? new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toLowerCase()
+                    : '';
+                  const winnerSide = item.winnerSide || '';
+                  const mySideIsWinner = winnerSide === item.userTeamSide;
 
                   return (
-                    <article key={item.id} className={`match-history-card ${item.userWon ? 'win' : 'loss'}`}>
-                      <div className="match-history-top">
-                        <div>
-                          <p className="match-history-title">{item.matchName}</p>
-                          <p className="match-history-meta">
-                            {item.matchFormat} | Winner: {winnerLabel}
-                          </p>
-                        </div>
-                        <span className="match-history-badge">{item.userWon ? 'WIN' : 'LOSS'}</span>
+                    <article key={item.id} className={`match-history-card compact ${item.userWon ? 'win' : 'loss'}`}>
+                      <div className="mh-row mh-top">
+                        <span className="mh-date">{dateText || '—'}</span>
+                        <span className="mh-dot">•</span>
+                        <span className="mh-format">{item.matchFormat || 'Match'}</span>
+                        <span className={`mh-badge ${item.userWon ? 'mh-badge-win' : 'mh-badge-loss'}`}>
+                          {item.userWon ? 'WIN' : 'LOSS'}
+                        </span>
                       </div>
-                      <p className="match-history-meta">{pointsText}</p>
-                      <p className="match-history-meta">Created by: {item.createdByUsername}</p>
-                      <p className="match-history-meta">My Team: {userTeamNames}</p>
-                      <p className="match-history-meta">Opponent Team: {opponentNames}</p>
-                      <p className="match-history-meta">Logged on: {dateText}</p>
+                      <div className="mh-row mh-versus">
+                        <div className="mh-chip-group">
+                          {myNames.map((name, idx) => (
+                            <span key={`my-${item.id}-${idx}`} className={`mh-chip ${mySideIsWinner ? 'mh-chip-win' : 'mh-chip-loss'}`}>
+                              {name}
+                            </span>
+                          ))}
+                        </div>
+                        <span className="mh-vs">vs</span>
+                        <div className="mh-chip-group">
+                          {oppNames.map((name, idx) => (
+                            <span key={`opp-${item.id}-${idx}`} className={`mh-chip ${!mySideIsWinner ? 'mh-chip-win' : 'mh-chip-loss'}`}>
+                              {name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mh-row mh-score">
+                        <span className="mh-score-value">{scoreDisplay}</span>
+                      </div>
                     </article>
                   );
                 })}
@@ -717,17 +735,27 @@ export default function App() {
                   />
                 </label>
 
-                <label>
-                  Winner
-                  <select value={winnerSide} onChange={(event) => setWinnerSide(event.target.value)}>
-                    <option value="TEAM">My Team</option>
-                    <option value="OPPONENT">Opponent Team</option>
-                  </select>
-                </label>
-
                 <div className="team-columns">
-                  <div className="team-card">
-                    <h3>My Team ({matchFormat === 'DOUBLES' ? '2' : '1'} players)</h3>
+                  <div className={`team-card ${winnerSide === 'TEAM' ? 'win' : 'loss'}`}>
+                    <div className="team-card-top">
+                      <h3>My Team ({matchFormat === 'DOUBLES' ? '2' : '1'} players)</h3>
+                      <div className="wl-toggle">
+                        <button
+                          type="button"
+                          className={winnerSide === 'TEAM' ? 'active' : ''}
+                          onClick={() => setWinnerSide('TEAM')}
+                        >
+                          W
+                        </button>
+                        <button
+                          type="button"
+                          className={winnerSide === 'OPPONENT' ? 'active' : ''}
+                          onClick={() => setWinnerSide('OPPONENT')}
+                        >
+                          L
+                        </button>
+                      </div>
+                    </div>
                     <label className="inline-field">
                       You
                       <input type="text" value={profileName} readOnly />
@@ -755,8 +783,26 @@ export default function App() {
                     </label>
                   </div>
 
-                  <div className="team-card">
-                    <h3>Opponent Team ({matchFormat === 'DOUBLES' ? '2' : '1'} players)</h3>
+                  <div className={`team-card ${winnerSide === 'OPPONENT' ? 'win' : 'loss'}`}>
+                    <div className="team-card-top">
+                      <h3>Opponent Team ({matchFormat === 'DOUBLES' ? '2' : '1'} players)</h3>
+                      <div className="wl-toggle">
+                        <button
+                          type="button"
+                          className={winnerSide === 'OPPONENT' ? 'active' : ''}
+                          onClick={() => setWinnerSide('OPPONENT')}
+                        >
+                          W
+                        </button>
+                        <button
+                          type="button"
+                          className={winnerSide === 'TEAM' ? 'active' : ''}
+                          onClick={() => setWinnerSide('TEAM')}
+                        >
+                          L
+                        </button>
+                      </div>
+                    </div>
                     <label className="inline-field">
                       Opponent 1
                       <select value={opponentOneId} onChange={(event) => setOpponentOneId(event.target.value)}>
@@ -820,7 +866,10 @@ export default function App() {
             className={`tab-btn ${activeTab === 'social' ? 'active' : ''}`}
             type="button"
             aria-label="Social"
-            onClick={() => setActiveTab('social')}
+            onClick={() => {
+              setActiveTab('social');
+              setStatus({ type: 'info', message: 'Social features are coming soon.' });
+            }}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true" className="tab-icon">
               <path d="M9 11a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm6 0a3 3 0 1 1 0-6 3 3 0 0 1 0 6ZM4 18.5C4 15.5 6.5 13 9.5 13h1A4.5 4.5 0 0 1 15 17.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-.5Zm9.2-4.9A5 5 0 0 1 19 18v1a1 1 0 0 1-1 1h-3.1a2.5 2.5 0 0 0 .9-1.9v-.6a6.5 6.5 0 0 0-2.6-5Z" />

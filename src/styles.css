@@ -761,6 +761,48 @@ button.primary:disabled {
   font-size: 0.95rem;
 }
 
+.team-card.win {
+  border-color: rgba(130, 246, 194, 0.5);
+  background: rgba(130, 246, 194, 0.12);
+}
+
+.team-card.loss {
+  border-color: rgba(255, 123, 123, 0.4);
+  background: rgba(255, 123, 123, 0.08);
+}
+
+.team-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.wl-toggle {
+  display: inline-flex;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.wl-toggle button {
+  background: transparent;
+  color: var(--text);
+  border: none;
+  padding: 6px 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.wl-toggle button + button {
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.wl-toggle button.active {
+  background: rgba(130, 246, 194, 0.2);
+  color: #0f1e1a;
+}
+
 .inline-field {
   display: grid;
   gap: 6px;
@@ -931,6 +973,103 @@ button.primary:disabled {
   background: rgba(255, 123, 123, 0.1);
 }
 
+.match-history-card.compact {
+  display: grid;
+  gap: 6px;
+}
+
+.mh-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mh-top {
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mh-date,
+.mh-format {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: lowercase;
+}
+
+.mh-dot {
+  color: var(--muted);
+}
+
+.mh-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  letter-spacing: 0.04rem;
+  font-size: 0.72rem;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  margin-left: auto;
+}
+
+.mh-badge-win {
+  color: #82f6c2;
+  border-color: rgba(130, 246, 194, 0.6);
+  background: rgba(130, 246, 194, 0.12);
+}
+
+.mh-badge-loss {
+  color: #ff9b9b;
+  border-color: rgba(255, 123, 123, 0.6);
+  background: rgba(255, 123, 123, 0.12);
+}
+
+.mh-versus {
+  gap: 10px;
+  font-weight: 700;
+}
+
+.mh-vs {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08rem;
+  font-size: 0.78rem;
+}
+
+.mh-chip-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mh-chip {
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.mh-chip-win {
+  border-color: rgba(130, 246, 194, 0.5);
+  background: rgba(130, 246, 194, 0.12);
+}
+
+.mh-chip-loss {
+  border-color: rgba(255, 123, 123, 0.5);
+  background: rgba(255, 123, 123, 0.12);
+}
+
+.mh-score {
+  justify-content: flex-start;
+}
+
+.mh-score-value {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.08rem;
+}
+
 .bottom-tabs {
   position: fixed;
   bottom: 16px;
@@ -940,8 +1079,8 @@ button.primary:disabled {
   gap: 10px;
   padding: 10px 12px;
   border-radius: 16px;
-  background: rgba(12, 20, 18, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(12, 20, 18, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(8px);
   z-index: 40;
@@ -951,8 +1090,8 @@ button.primary:disabled {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text);
   font-weight: 700;
   padding: 10px 12px;
@@ -967,9 +1106,11 @@ button.primary:disabled {
 }
 
 .tab-btn.active {
-  border-color: rgba(130, 246, 194, 0.65);
-  box-shadow: 0 0 0 1px rgba(130, 246, 194, 0.35);
-  background: rgba(130, 246, 194, 0.12);
+  border-color: rgba(130, 246, 194, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(130, 246, 194, 0.3),
+    0 0 0 6px rgba(130, 246, 194, 0.08);
+  background: rgba(130, 246, 194, 0.16);
 }
 
 .tab-icon {
