@@ -37,6 +37,10 @@ body {
   padding: clamp(28px, 5vw, 72px);
   background: #101413;
   isolation: isolate;
+  cursor: none;
+  touch-action: none;
+  --reveal-x: 50%;
+  --reveal-y: 50%;
 }
 
 .birthday-photo {
@@ -47,6 +51,42 @@ body {
   object-fit: cover;
   object-position: center;
   z-index: -3;
+}
+
+.birthday-photo-bottom {
+  z-index: -5;
+}
+
+.birthday-photo-top {
+  z-index: -4;
+  -webkit-mask-image: radial-gradient(
+    circle 150px at var(--reveal-x) var(--reveal-y),
+    transparent 0 58%,
+    rgba(0, 0, 0, 0.34) 64%,
+    #000 72%
+  );
+  mask-image: radial-gradient(
+    circle 150px at var(--reveal-x) var(--reveal-y),
+    transparent 0 58%,
+    rgba(0, 0, 0, 0.34) 64%,
+    #000 72%
+  );
+}
+
+.birthday-eraser {
+  position: absolute;
+  left: var(--reveal-x);
+  top: var(--reveal-y);
+  width: 300px;
+  height: 300px;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow:
+    0 0 0 1px rgba(145, 255, 211, 0.42),
+    0 18px 60px rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .birthday-shade {
@@ -93,6 +133,26 @@ body {
   .birthday-post {
     align-items: flex-end;
     padding: 24px 20px 34px;
+  }
+
+  .birthday-photo-top {
+    -webkit-mask-image: radial-gradient(
+      circle 118px at var(--reveal-x) var(--reveal-y),
+      transparent 0 58%,
+      rgba(0, 0, 0, 0.34) 64%,
+      #000 72%
+    );
+    mask-image: radial-gradient(
+      circle 118px at var(--reveal-x) var(--reveal-y),
+      transparent 0 58%,
+      rgba(0, 0, 0, 0.34) 64%,
+      #000 72%
+    );
+  }
+
+  .birthday-eraser {
+    width: 236px;
+    height: 236px;
   }
 
   .birthday-shade {
