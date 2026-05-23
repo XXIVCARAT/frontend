@@ -37,9 +37,6 @@ body {
   padding: clamp(28px, 5vw, 72px);
   background: #101413;
   isolation: isolate;
-  cursor: none;
-  --reveal-x: 50%;
-  --reveal-y: 50%;
 }
 
 .birthday-photo {
@@ -50,40 +47,6 @@ body {
   object-fit: cover;
   object-position: center;
   z-index: -3;
-}
-
-.birthday-photo-bottom {
-  z-index: -5;
-}
-
-.birthday-cover-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -4;
-}
-
-.birthday-eraser {
-  position: absolute;
-  left: var(--reveal-x);
-  top: var(--reveal-y);
-  width: 300px;
-  height: 300px;
-  border: 2px solid rgba(255, 255, 255, 0.7);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow:
-    0 0 0 1px rgba(145, 255, 211, 0.42),
-    0 18px 60px rgba(0, 0, 0, 0.22);
-  pointer-events: none;
-  z-index: -1;
-  transition: transform 0.12s ease, border-color 0.12s ease;
-}
-
-.birthday-eraser.active {
-  border-color: rgba(145, 255, 211, 0.92);
-  transform: translate(-50%, -50%) scale(0.96);
 }
 
 .birthday-shade {
@@ -138,6 +101,14 @@ body {
   color: #fffdf4;
   cursor: auto;
   z-index: 3;
+}
+
+.wish-panel-toggle {
+  display: none;
+}
+
+.wish-board-head {
+  display: none;
 }
 
 .wish-form,
@@ -202,6 +173,12 @@ body {
 }
 
 .media-status {
+  margin: -2px 0 0;
+  color: rgba(255, 253, 244, 0.72);
+  font-size: 0.82rem;
+}
+
+.form-status {
   margin: -2px 0 0;
   color: rgba(255, 253, 244, 0.72);
   font-size: 0.82rem;
@@ -351,34 +328,108 @@ body {
 
 @media (max-width: 680px) {
   .birthday-post {
-    align-items: flex-start;
-    padding: 22px 16px 26px;
-    flex-direction: column;
-    gap: 18px;
-  }
-
-  .birthday-eraser {
-    width: 236px;
-    height: 236px;
+    min-height: 100svh;
+    align-items: flex-end;
+    padding: 18px 16px 92px;
   }
 
   .birthday-shade {
     background:
-      linear-gradient(0deg, rgba(8, 11, 10, 0.9) 0%, rgba(8, 11, 10, 0.52) 54%, rgba(8, 11, 10, 0.18) 100%);
+      linear-gradient(0deg, rgba(8, 11, 10, 0.86) 0%, rgba(8, 11, 10, 0.42) 48%, rgba(8, 11, 10, 0.08) 100%);
   }
 
   .birthday-message {
-    order: 2;
+    width: 100%;
     padding-right: 0;
-    margin-top: auto;
+    padding-bottom: 4px;
+  }
+
+  .birthday-kicker {
+    margin-bottom: 10px;
+  }
+
+  .birthday-message h1 {
+    font-size: clamp(2.1rem, 12vw, 4rem);
+    max-width: 11ch;
+  }
+
+  .birthday-line {
+    max-width: 280px;
+    margin-top: 14px;
+    font-size: 0.98rem;
+  }
+
+  .wish-panel-toggle {
+    position: fixed;
+    right: 16px;
+    bottom: 18px;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    border: 0;
+    border-radius: 8px;
+    padding: 11px 14px;
+    color: #0f1e1a;
+    background: #91ffd3;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.34);
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
   }
 
   .wish-board {
-    position: relative;
-    inset: auto;
-    order: 1;
+    position: fixed;
+    inset: auto 0 0;
     width: 100%;
-    max-height: 45vh;
+    max-height: min(72svh, 620px);
+    padding: 12px 12px 18px;
+    overflow: auto;
+    background: rgba(8, 11, 10, 0.74);
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(18px);
+    transform: translateY(calc(100% - 66px));
+    transition: transform 0.24s ease;
+  }
+
+  .wish-board.open {
+    transform: translateY(0);
+  }
+
+  .wish-board-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 2px;
+  }
+
+  .wish-board-head h2 {
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .wish-board-head button {
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    color: #fffdf4;
+    background: rgba(255, 255, 255, 0.13);
+    font: inherit;
+    font-weight: 700;
+  }
+
+  .wish-form,
+  .media-uploader,
+  .wish-card {
+    background: rgba(9, 13, 13, 0.7);
+  }
+
+  .media-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

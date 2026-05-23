@@ -1,189 +1,91 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-const ERASE_KEY = 'nirlepBirthday:erasedCover';
-const WISHES_KEY = 'nirlepBirthday:wishes';
-const LIKES_KEY = 'nirlepBirthday:likes';
-const MEDIA_KEY = 'nirlepBirthday:media';
-const ERASER_SIZE = 150;
-const MAX_MEDIA_BYTES = 2.8 * 1024 * 1024;
+const MAX_MEDIA_BYTES = 8 * 1024 * 1024;
 
-function readStoredJson(key, fallback) {
+async function readJson(response) {
+  const text = await response.text();
+  if (!text) return {};
+
   try {
-    const value = window.localStorage.getItem(key);
-    return value ? JSON.parse(value) : fallback;
+    return JSON.parse(text);
   } catch {
-    return fallback;
+    return {};
   }
 }
 
 export default function App() {
-  const canvasRef = useRef(null);
-  const coverImageRef = useRef(null);
-  const saveTimerRef = useRef(null);
-  const [reveal, setReveal] = useState({ x: 50, y: 50 });
-  const [isDrawing, setIsDrawing] = useState(false);
   const [wishes, setWishes] = useState([]);
-  const [likes, setLikes] = useState({});
   const [username, setUsername] = useState('');
   const [wish, setWish] = useState('');
+  const [wishStatus, setWishStatus] = useState('');
   const [bursts, setBursts] = useState([]);
   const [media, setMedia] = useState([]);
   const [mediaStatus, setMediaStatus] = useState('');
+  const [panelOpen, setPanelOpen] = useState(false);
 
   useEffect(() => {
-    const storedWishes = readStoredJson(WISHES_KEY, null);
-    const storedLikes = readStoredJson(LIKES_KEY, {});
-    const storedMedia = readStoredJson(MEDIA_KEY, []);
-
-    setLikes(storedLikes);
-    setMedia(Array.isArray(storedMedia) ? storedMedia : []);
-
-    if (storedWishes) {
-      setWishes(storedWishes);
-      return;
-    }
-
-    fetch('/birthday-wishes.json')
-      .then((response) => response.json())
+    fetch('/api/birthday')
+      .then((response) => readJson(response))
       .then((data) => {
-        const seedWishes = Array.isArray(data?.wishes) ? data.wishes : [];
-        setWishes(seedWishes);
+        setWishes(Array.isArray(data?.wishes) ? data.wishes : []);
+        setMedia(Array.isArray(data?.media) ? data.media : []);
       })
       .catch(() => {
+        setWishStatus('Unable to load shared wishes right now.');
         setWishes([]);
+        setMedia([]);
       });
   }, []);
 
-  useEffect(() => {
-    if (wishes.length > 0) {
-      window.localStorage.setItem(WISHES_KEY, JSON.stringify(wishes));
-    }
-  }, [wishes]);
-
-  useEffect(() => {
-    window.localStorage.setItem(LIKES_KEY, JSON.stringify(likes));
-  }, [likes]);
-
-  useEffect(() => {
-    window.localStorage.setItem(MEDIA_KEY, JSON.stringify(media));
-  }, [media]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const image = new Image();
-    image.crossOrigin = 'anonymous';
-    image.src = '/nirlep-cover-photo.jpg';
-    coverImageRef.current = image;
-
-    function drawCover() {
-      if (!canvas || !coverImageRef.current?.complete) return;
-
-      const context = canvas.getContext('2d');
-      const rect = canvas.getBoundingClientRect();
-      const ratio = window.devicePixelRatio || 1;
-      canvas.width = Math.max(1, Math.floor(rect.width * ratio));
-      canvas.height = Math.max(1, Math.floor(rect.height * ratio));
-      context.setTransform(ratio, 0, 0, ratio, 0, 0);
-
-      const storedCanvas = window.localStorage.getItem(ERASE_KEY);
-      if (storedCanvas) {
-        const saved = new Image();
-        saved.onload = () => {
-          context.clearRect(0, 0, rect.width, rect.height);
-          context.drawImage(saved, 0, 0, rect.width, rect.height);
-        };
-        saved.src = storedCanvas;
-        return;
-      }
-
-      const scale = Math.max(rect.width / image.naturalWidth, rect.height / image.naturalHeight);
-      const width = image.naturalWidth * scale;
-      const height = image.naturalHeight * scale;
-      const x = (rect.width - width) / 2;
-      const y = (rect.height - height) / 2;
-
-      context.clearRect(0, 0, rect.width, rect.height);
-      context.drawImage(image, x, y, width, height);
-    }
-
-    image.onload = drawCover;
-    image.onerror = () => {
-      const context = canvas?.getContext('2d');
-      if (context) context.clearRect(0, 0, canvas.width, canvas.height);
-    };
-
-    window.addEventListener('resize', drawCover);
-    return () => {
-      window.removeEventListener('resize', drawCover);
-      window.clearTimeout(saveTimerRef.current);
-    };
-  }, []);
-
-  function saveCanvasSoon() {
-    window.clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = window.setTimeout(() => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      window.localStorage.setItem(ERASE_KEY, canvas.toDataURL('image/png'));
-    }, 180);
-  }
-
-  function eraseAt(event) {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const bounds = canvas.getBoundingClientRect();
-    const x = event.clientX - bounds.left;
-    const y = event.clientY - bounds.top;
-    const xPercent = (x / bounds.width) * 100;
-    const yPercent = (y / bounds.height) * 100;
-    const context = canvas.getContext('2d');
-
-    setReveal({
-      x: Math.min(100, Math.max(0, xPercent)),
-      y: Math.min(100, Math.max(0, yPercent))
-    });
-
-    context.save();
-    context.globalCompositeOperation = 'destination-out';
-    context.beginPath();
-    context.arc(x, y, ERASER_SIZE, 0, Math.PI * 2);
-    context.fill();
-    context.restore();
-    saveCanvasSoon();
-  }
-
-  function handlePointerMove(event) {
-    if (event.target.closest('.wish-board')) return;
-    eraseAt(event);
-  }
-
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     const cleanUsername = username.trim();
     const cleanWish = wish.trim();
     if (!cleanUsername || !cleanWish) return;
 
-    setWishes((current) => [
-      {
-        id: `wish-${Date.now()}`,
-        username: cleanUsername,
-        wish: cleanWish,
-        createdAt: new Date().toISOString()
-      },
-      ...current
-    ]);
-    setUsername('');
-    setWish('');
+    setWishStatus('');
+
+    try {
+      const response = await fetch('/api/wishes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: cleanUsername, wish: cleanWish })
+      });
+      const savedWish = await readJson(response);
+
+      if (!response.ok) {
+        throw new Error(savedWish?.error || 'Unable to post wish.');
+      }
+
+      setWishes((current) => [savedWish, ...current]);
+      setUsername('');
+      setWish('');
+      setWishStatus('Wish posted for everyone.');
+    } catch (error) {
+      setWishStatus(error.message || 'Unable to post wish.');
+    }
   }
 
-  function handleLike(id) {
-    setLikes((current) => ({ ...current, [id]: (current[id] || 0) + 1 }));
-    const burstId = `${id}-${Date.now()}`;
-    setBursts((current) => [...current, { id: burstId, wishId: id }]);
-    window.setTimeout(() => {
-      setBursts((current) => current.filter((burst) => burst.id !== burstId));
-    }, 900);
+  async function handleLike(id) {
+    try {
+      const response = await fetch(`/api/wishes/${id}/like`, { method: 'POST' });
+      const data = await readJson(response);
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Unable to react.');
+      }
+
+      setWishes((current) => current.map((item) => (
+        item.id === id ? { ...item, likes: data.likes } : item
+      )));
+      const burstId = `${id}-${Date.now()}`;
+      setBursts((current) => [...current, { id: burstId, wishId: id }]);
+      window.setTimeout(() => {
+        setBursts((current) => current.filter((burst) => burst.id !== burstId));
+      }, 900);
+    } catch {
+      setWishStatus('Reaction could not be saved.');
+    }
   }
 
   function handleMediaUpload(event) {
@@ -197,60 +99,58 @@ export default function App() {
     }
 
     if (file.size > MAX_MEDIA_BYTES) {
-      setMediaStatus('Keep it under 2.8 MB so it can stay saved in the browser.');
+      setMediaStatus('Keep it under 8 MB.');
       event.target.value = '';
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setMedia((current) => [
-        {
-          id: `media-${Date.now()}`,
-          name: file.name,
-          type: file.type,
-          src: reader.result
-        },
-        ...current
-      ].slice(0, 8));
-      setMediaStatus('Saved to this browser.');
-      event.target.value = '';
-    };
-    reader.onerror = () => {
-      setMediaStatus('Upload failed. Try a smaller file.');
-      event.target.value = '';
-    };
-    reader.readAsDataURL(file);
+    const formData = new FormData();
+    formData.append('media', file);
+    setMediaStatus('Uploading...');
+
+    fetch('/api/media', {
+      method: 'POST',
+      body: formData
+    })
+      .then((response) => readJson(response).then((data) => ({ response, data })))
+      .then(({ response, data }) => {
+        if (!response.ok) {
+          throw new Error(data?.error || 'Upload failed.');
+        }
+        setMedia((current) => [data, ...current]);
+        setMediaStatus('Saved for everyone.');
+      })
+      .catch((error) => {
+        setMediaStatus(error.message || 'Upload failed. Try a smaller file.');
+      })
+      .finally(() => {
+        event.target.value = '';
+      });
   }
 
-  function removeMedia(id) {
-    setMedia((current) => current.filter((item) => item.id !== id));
+  async function removeMedia(id) {
+    try {
+      const response = await fetch(`/api/media/${id}`, { method: 'DELETE' });
+      const data = await readJson(response);
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Unable to remove upload.');
+      }
+
+      setMedia((current) => current.filter((item) => item.id !== id));
+      setMediaStatus('Removed for everyone.');
+    } catch (error) {
+      setMediaStatus(error.message || 'Unable to remove upload.');
+    }
   }
 
   return (
-    <main
-      className="birthday-post"
-      aria-label="Birthday wish for Nirlep"
-      onPointerDown={(event) => {
-        if (event.target.closest('.wish-board')) return;
-        setIsDrawing(true);
-        eraseAt(event);
-      }}
-      onPointerMove={handlePointerMove}
-      onPointerUp={() => setIsDrawing(false)}
-      onPointerLeave={() => setIsDrawing(false)}
-      style={{
-        '--reveal-x': `${reveal.x}%`,
-        '--reveal-y': `${reveal.y}%`
-      }}
-    >
+    <main className="birthday-post" aria-label="Birthday wish for Nirlep">
       <img
-        className="birthday-photo birthday-photo-bottom"
+        className="birthday-photo"
         src="/nirlep-birthday-photo.jpg"
-        alt="Nirlep birthday reveal"
+        alt="Nirlep birthday celebration"
       />
-      <canvas ref={canvasRef} className="birthday-cover-canvas" aria-hidden="true" />
-      <div className={`birthday-eraser ${isDrawing ? 'active' : ''}`} aria-hidden="true"></div>
       <div className="birthday-shade" aria-hidden="true"></div>
 
       <section className="birthday-message">
@@ -259,7 +159,21 @@ export default function App() {
         <p className="birthday-line">Keep smashing, keep shining, and make this year championship-level.</p>
       </section>
 
-      <aside className="wish-board" aria-label="Birthday wishes">
+      <button
+        type="button"
+        className="wish-panel-toggle"
+        onClick={() => setPanelOpen((open) => !open)}
+      >
+        {panelOpen ? 'Hide wishes' : 'Open wishes'}
+      </button>
+
+      <aside className={`wish-board ${panelOpen ? 'open' : ''}`} aria-label="Birthday wishes">
+        <div className="wish-board-head">
+          <h2>Birthday Board</h2>
+          <button type="button" onClick={() => setPanelOpen(false)} aria-label="Close wishes">
+            Close
+          </button>
+        </div>
         <form className="wish-form" onSubmit={handleSubmit}>
           <h2>Birthday Wishes</h2>
           <input
@@ -278,6 +192,7 @@ export default function App() {
             required
           />
           <button type="submit">Post wish</button>
+          {wishStatus && <p className="form-status">{wishStatus}</p>}
         </form>
 
         <section className="media-uploader" aria-label="Nirlep photo and GIF uploads">
@@ -312,7 +227,7 @@ export default function App() {
               </div>
               <button type="button" className="wish-like" onClick={() => handleLike(item.id)}>
                 <span>React</span>
-                <b>{likes[item.id] || 0}</b>
+                <b>{item.likes || 0}</b>
                 {bursts
                   .filter((burst) => burst.wishId === item.id)
                   .map((burst) => (
