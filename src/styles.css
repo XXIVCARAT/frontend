@@ -38,7 +38,6 @@ body {
   background: #101413;
   isolation: isolate;
   cursor: none;
-  touch-action: none;
   --reveal-x: 50%;
   --reveal-y: 50%;
 }
@@ -57,20 +56,12 @@ body {
   z-index: -5;
 }
 
-.birthday-photo-top {
+.birthday-cover-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: -4;
-  -webkit-mask-image: radial-gradient(
-    circle 150px at var(--reveal-x) var(--reveal-y),
-    transparent 0 58%,
-    rgba(0, 0, 0, 0.34) 64%,
-    #000 72%
-  );
-  mask-image: radial-gradient(
-    circle 150px at var(--reveal-x) var(--reveal-y),
-    transparent 0 58%,
-    rgba(0, 0, 0, 0.34) 64%,
-    #000 72%
-  );
 }
 
 .birthday-eraser {
@@ -87,6 +78,12 @@ body {
     0 18px 60px rgba(0, 0, 0, 0.22);
   pointer-events: none;
   z-index: -1;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+.birthday-eraser.active {
+  border-color: rgba(145, 255, 211, 0.92);
+  transform: translate(-50%, -50%) scale(0.96);
 }
 
 .birthday-shade {
@@ -102,6 +99,7 @@ body {
   width: min(760px, 100%);
   color: #fffdf4;
   text-shadow: 0 4px 28px rgba(0, 0, 0, 0.55);
+  padding-right: min(34vw, 430px);
 }
 
 .birthday-kicker {
@@ -129,25 +127,150 @@ body {
   line-height: 1.45;
 }
 
+.wish-board {
+  position: absolute;
+  right: clamp(16px, 3vw, 42px);
+  top: clamp(18px, 4vw, 54px);
+  width: min(360px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  display: grid;
+  gap: 12px;
+  color: #fffdf4;
+  cursor: auto;
+  z-index: 3;
+}
+
+.wish-form,
+.wish-card {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(9, 13, 13, 0.58);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+}
+
+.wish-form {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 8px;
+}
+
+.wish-form h2 {
+  margin: 0 0 2px;
+  font-size: 1.05rem;
+}
+
+.wish-form input,
+.wish-form textarea {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.11);
+  color: #fffdf4;
+  border-radius: 8px;
+  padding: 10px 11px;
+  font: inherit;
+  outline: none;
+}
+
+.wish-form textarea {
+  min-height: 76px;
+  resize: vertical;
+}
+
+.wish-form input::placeholder,
+.wish-form textarea::placeholder {
+  color: rgba(255, 253, 244, 0.68);
+}
+
+.wish-form button,
+.wish-like {
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wish-form button {
+  padding: 10px 12px;
+  color: #0f1e1a;
+  background: #91ffd3;
+}
+
+.wish-list {
+  display: grid;
+  gap: 10px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.wish-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.wish-card strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #91ffd3;
+  font-size: 0.9rem;
+}
+
+.wish-card p {
+  margin: 0;
+  color: rgba(255, 253, 244, 0.88);
+  font-size: 0.92rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.wish-like {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  color: #fffdf4;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.wish-like b {
+  color: #91ffd3;
+}
+
+.emoji-burst {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  pointer-events: none;
+  animation: emoji-pop 0.9s ease-out forwards;
+}
+
+@keyframes emoji-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.5) rotate(0deg);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -62px) scale(1.4) rotate(18deg);
+  }
+}
+
 @media (max-width: 680px) {
   .birthday-post {
-    align-items: flex-end;
-    padding: 24px 20px 34px;
-  }
-
-  .birthday-photo-top {
-    -webkit-mask-image: radial-gradient(
-      circle 118px at var(--reveal-x) var(--reveal-y),
-      transparent 0 58%,
-      rgba(0, 0, 0, 0.34) 64%,
-      #000 72%
-    );
-    mask-image: radial-gradient(
-      circle 118px at var(--reveal-x) var(--reveal-y),
-      transparent 0 58%,
-      rgba(0, 0, 0, 0.34) 64%,
-      #000 72%
-    );
+    align-items: flex-start;
+    padding: 22px 16px 26px;
+    flex-direction: column;
+    gap: 18px;
   }
 
   .birthday-eraser {
@@ -158,6 +281,20 @@ body {
   .birthday-shade {
     background:
       linear-gradient(0deg, rgba(8, 11, 10, 0.9) 0%, rgba(8, 11, 10, 0.52) 54%, rgba(8, 11, 10, 0.18) 100%);
+  }
+
+  .birthday-message {
+    order: 2;
+    padding-right: 0;
+    margin-top: auto;
+  }
+
+  .wish-board {
+    position: relative;
+    inset: auto;
+    order: 1;
+    width: 100%;
+    max-height: 45vh;
   }
 }
 
