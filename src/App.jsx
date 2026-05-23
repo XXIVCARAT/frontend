@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 const ERASE_KEY = 'nirlepBirthday:erasedCover';
 const WISHES_KEY = 'nirlepBirthday:wishes';
 const LIKES_KEY = 'nirlepBirthday:likes';
+const MEDIA_KEY = 'nirlepBirthday:media';
 const ERASER_SIZE = 150;
+const MAX_MEDIA_BYTES = 2.8 * 1024 * 1024;
 
 function readStoredJson(key, fallback) {
   try {
@@ -25,12 +27,16 @@ export default function App() {
   const [username, setUsername] = useState('');
   const [wish, setWish] = useState('');
   const [bursts, setBursts] = useState([]);
+  const [media, setMedia] = useState([]);
+  const [mediaStatus, setMediaStatus] = useState('');
 
   useEffect(() => {
     const storedWishes = readStoredJson(WISHES_KEY, null);
     const storedLikes = readStoredJson(LIKES_KEY, {});
+    const storedMedia = readStoredJson(MEDIA_KEY, []);
 
     setLikes(storedLikes);
+    setMedia(Array.isArray(storedMedia) ? storedMedia : []);
 
     if (storedWishes) {
       setWishes(storedWishes);
@@ -57,6 +63,10 @@ export default function App() {
   useEffect(() => {
     window.localStorage.setItem(LIKES_KEY, JSON.stringify(likes));
   }, [likes]);
+
+  useEffect(() => {
+    window.localStorage.setItem(MEDIA_KEY, JSON.stringify(media));
+  }, [media]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -176,6 +186,47 @@ export default function App() {
     }, 900);
   }
 
+  function handleMediaUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setMediaStatus('Please upload a photo or GIF.');
+      event.target.value = '';
+      return;
+    }
+
+    if (file.size > MAX_MEDIA_BYTES) {
+      setMediaStatus('Keep it under 2.8 MB so it can stay saved in the browser.');
+      event.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setMedia((current) => [
+        {
+          id: `media-${Date.now()}`,
+          name: file.name,
+          type: file.type,
+          src: reader.result
+        },
+        ...current
+      ].slice(0, 8));
+      setMediaStatus('Saved to this browser.');
+      event.target.value = '';
+    };
+    reader.onerror = () => {
+      setMediaStatus('Upload failed. Try a smaller file.');
+      event.target.value = '';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeMedia(id) {
+    setMedia((current) => current.filter((item) => item.id !== id));
+  }
+
   return (
     <main
       className="birthday-post"
@@ -228,6 +279,29 @@ export default function App() {
           />
           <button type="submit">Post wish</button>
         </form>
+
+        <section className="media-uploader" aria-label="Nirlep photo and GIF uploads">
+          <div className="media-upload-head">
+            <h2>Nirlep Gallery</h2>
+            <label className="media-upload-btn">
+              Upload
+              <input type="file" accept="image/*,.gif" onChange={handleMediaUpload} />
+            </label>
+          </div>
+          {mediaStatus && <p className="media-status">{mediaStatus}</p>}
+          {media.length > 0 && (
+            <div className="media-grid">
+              {media.map((item) => (
+                <figure className="media-tile" key={item.id}>
+                  <img src={item.src} alt={item.name || 'Uploaded Nirlep memory'} />
+                  <button type="button" onClick={() => removeMedia(item.id)} aria-label="Remove upload">
+                    Remove
+                  </button>
+                </figure>
+              ))}
+            </div>
+          )}
+        </section>
 
         <div className="wish-list">
           {wishes.map((item) => (

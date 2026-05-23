@@ -141,7 +141,8 @@ body {
 }
 
 .wish-form,
-.wish-card {
+.wish-card,
+.media-uploader {
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: rgba(9, 13, 13, 0.58);
   backdrop-filter: blur(16px);
@@ -158,6 +159,89 @@ body {
 .wish-form h2 {
   margin: 0 0 2px;
   font-size: 1.05rem;
+}
+
+.media-uploader {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 8px;
+}
+
+.media-upload-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.media-upload-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.media-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  border-radius: 8px;
+  padding: 8px 11px;
+  color: #0f1e1a;
+  background: #91ffd3;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.media-upload-btn input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.media-status {
+  margin: -2px 0 0;
+  color: rgba(255, 253, 244, 0.72);
+  font-size: 0.82rem;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.media-tile {
+  position: relative;
+  aspect-ratio: 1;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.media-tile img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.media-tile button {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  border: 0;
+  border-radius: 8px;
+  padding: 5px 7px;
+  color: #fffdf4;
+  background: rgba(7, 11, 10, 0.7);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .wish-form input,
